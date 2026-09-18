@@ -223,7 +223,13 @@ export function inventory(items) {
 
 // ---------- what needs doing ----------
 
-export const needsDetails = (i) => i.status === 'tolist' && (!i.title?.trim() || i.price === null || i.price === '' || !i.photos?.length);
+// Nothing typed, no photo, never posted: safe to clear away when she leaves it.
+export const isBlank = (i) => i.status === 'tolist' && !i.photos?.length && !i.title?.trim()
+  && (i.price === null || i.price === '') && (i.cost === null || i.cost === '') && !i.floor
+  && !i.description?.trim() && !i.notes?.trim() && !i.foundWhere?.trim() && !i.storedAt?.trim()
+  && !i.category && !i.condition && !Object.keys(i.listings || {}).length;
+
+export const needsDetails =(i) => i.status === 'tolist' && (!i.title?.trim() || i.price === null || i.price === '' || !i.photos?.length);
 export const readyToPost = (i) => i.status === 'tolist' && !needsDetails(i);
 export const isStale = (i, staleDays = 14, now = Date.now()) => i.status === 'listed'
   && freshAt(i) !== null && daysSince(freshAt(i), now) >= staleDays;

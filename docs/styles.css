@@ -1,30 +1,35 @@
-/* Curbside. Warm paper + deep green. Phone first; follows the phone's light/dark setting. */
+/* Curbside. Lavender and white with purple and pink. Phone first; follows the phone's
+   light/dark setting. Every text colour here is checked by tools/check-contrast.mjs. */
 
 :root {
-  --bg: #f4efe6;
-  --surface: #fffdf8;
-  --field: #fbf8f1;
-  --sunk: #ede6d8;
-  --ink: #1f231d;
-  --ink-2: #474c43;
-  --muted: #72766b;
-  --line: #e1d8c6;
-  --line-strong: #cfc4ae;
-  --accent: #2d6a4f;
-  --accent-strong: #22533d;
-  --accent-soft: #dfece3;
+  --bg: #f8f4fc;
+  --surface: #ffffff;
+  --field: #fcfaff;
+  --sunk: #efe8f7;
+  --ink: #2b2335;
+  --ink-2: #51475f;
+  --muted: #6e6480;
+  --line: #ebe3f4;
+  --line-strong: #d8cbe7;
+  --accent: #7446c2;
+  --accent-strong: #5d33a6;
+  --accent-soft: #efe6fc;
   --accent-ink: #ffffff;
-  --warn: #a4501a;
-  --warn-soft: #f8e6d4;
-  --danger: #b42318;
-  --danger-soft: #fbe3df;
-  --s-tolist: #4a5c8c;
-  --s-listed: #2d6a4f;
-  --s-pending: #9a6212;
-  --s-sold: #6a48ad;
-  --s-done: #6f7369;
-  --shadow: 0 1px 2px rgba(70, 50, 20, 0.06), 0 4px 16px rgba(70, 50, 20, 0.06);
-  --shadow-lift: 0 10px 30px rgba(40, 30, 10, 0.18);
+  --brand-2: #c43f86;
+  --grad-a: #7a4bcb;
+  --grad-b: #c43f86;
+  --pink-soft: #fde9f3;
+  --warn: #b0265f;
+  --warn-soft: #fde9f1;
+  --danger: #b3261e;
+  --danger-soft: #fce4e2;
+  --s-tolist: #4b62a5;
+  --s-listed: #7446c2;
+  --s-pending: #9c5510;
+  --s-sold: #b8347a;
+  --s-done: #6e6878;
+  --shadow: 0 1px 2px rgba(70, 40, 110, 0.06), 0 4px 16px rgba(70, 40, 110, 0.07);
+  --shadow-lift: 0 10px 30px rgba(50, 20, 80, 0.2);
   --radius: 16px;
   --font: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
   --display: ui-rounded, "SF Pro Rounded", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
@@ -34,28 +39,30 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #11140f;
-    --surface: #1a1e18;
-    --field: #151913;
-    --sunk: #232822;
-    --ink: #eef0ea;
-    --ink-2: #c8ccc1;
-    --muted: #9aa093;
-    --line: #2d3329;
-    --line-strong: #3d4539;
-    --accent: #5bbf8a;
-    --accent-strong: #7fd2a5;
-    --accent-soft: #1d3629;
-    --accent-ink: #0b1a11;
-    --warn: #eea56b;
-    --warn-soft: #3a2616;
-    --danger: #ff8a7a;
-    --danger-soft: #3d1a16;
-    --s-tolist: #8fa3dc;
-    --s-listed: #5bbf8a;
-    --s-pending: #e0a54a;
-    --s-sold: #b39af0;
-    --s-done: #a2a699;
+    --bg: #17121e;
+    --surface: #211a2a;
+    --field: #1c1624;
+    --sunk: #2c2438;
+    --ink: #f5f0fb;
+    --ink-2: #d6cce3;
+    --muted: #ab9fbd;
+    --line: #342b40;
+    --line-strong: #473b56;
+    --accent: #c0a3f5;
+    --accent-strong: #d6c3fa;
+    --accent-soft: #33264a;
+    --accent-ink: #1f1233;
+    --brand-2: #f29ac6;
+    --pink-soft: #3a2031;
+    --warn: #f5a3c7;
+    --warn-soft: #3b1f30;
+    --danger: #ff9aa2;
+    --danger-soft: #3f1a20;
+    --s-tolist: #a5b5ec;
+    --s-listed: #c0a3f5;
+    --s-pending: #ebb663;
+    --s-sold: #f5a3c7;
+    --s-done: #aca5b8;
     --shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
     --shadow-lift: 0 10px 30px rgba(0, 0, 0, 0.5);
     color-scheme: dark;
@@ -144,8 +151,8 @@ body[data-page="money"] .page { padding-bottom: calc(var(--tabbar-h) + 40px + en
   width: 34px;
   height: 34px;
   border-radius: 10px;
-  background: var(--accent);
-  color: var(--accent-ink);
+  background: linear-gradient(135deg, var(--grad-a), var(--grad-b));
+  color: #fff;
 }
 .brand-mark svg { width: 20px; height: 20px; stroke-width: 2; }
 
@@ -213,9 +220,9 @@ body[data-page="money"] .page { padding-bottom: calc(var(--tabbar-h) + 40px + en
   height: 60px;
   margin-top: -26px;
   border-radius: 50%;
-  background: var(--accent);
-  color: var(--accent-ink);
-  box-shadow: 0 6px 18px color-mix(in srgb, var(--accent) 40%, transparent);
+  background: linear-gradient(135deg, var(--grad-a), var(--grad-b));
+  color: #fff;
+  box-shadow: 0 6px 18px color-mix(in srgb, var(--grad-b) 35%, transparent);
   border: 4px solid var(--bg);
 }
 .snap-circle svg { width: 28px; height: 28px; stroke-width: 2; }
@@ -296,7 +303,7 @@ body[data-page="money"] .page { padding-bottom: calc(var(--tabbar-h) + 40px + en
 .notice p { margin: 0; font-size: 14px; color: var(--ink-2); }
 .notice p svg { width: 16px; height: 16px; vertical-align: -3px; }
 .notice .icon-btn { width: 36px; height: 36px; margin: -6px 0 0; }
-.notice-warn, .notice-backup { background: var(--warn-soft); }
+.notice-warn, .notice-backup { background: var(--pink-soft); }
 .notice-actions { display: flex; gap: 8px; margin-top: 10px; }
 .notice .btn-small { margin-top: 8px; }
 .notice-actions .btn-small { margin-top: 0; }
@@ -352,8 +359,8 @@ body[data-page="money"] .page { padding-bottom: calc(var(--tabbar-h) + 40px + en
 }
 .chip svg { width: 14px; height: 14px; }
 .chip-n { color: var(--muted); font-weight: 500; font-variant-numeric: tabular-nums; }
-.chip.on { background: var(--ink); border-color: var(--ink); color: var(--bg); }
-.chip.on .chip-n { color: color-mix(in srgb, var(--bg) 70%, transparent); }
+.chip.on { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.chip.on .chip-n { color: color-mix(in srgb, var(--accent-ink) 75%, transparent); }
 
 .todo-strip { padding-top: 4px; }
 .todo {
@@ -374,7 +381,7 @@ body[data-page="money"] .page { padding-bottom: calc(var(--tabbar-h) + 40px + en
   font: inherit;
   cursor: pointer;
 }
-.todo.on { border-color: var(--ink); }
+.todo.on { border-color: var(--accent); }
 .todo-k { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; }
 .todo-v { font-size: 15px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .todo-pending .todo-k { color: var(--s-pending); }
@@ -414,11 +421,11 @@ body[data-page="money"] .page { padding-bottom: calc(var(--tabbar-h) + 40px + en
   letter-spacing: 0.01em;
 }
 .item-thumb .badge { position: absolute; top: 8px; left: 8px; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25); }
-.badge-tolist { background: #4a5c8c; }
-.badge-listed { background: #2d6a4f; }
-.badge-pending { background: #9a6212; }
-.badge-sold { background: #6a48ad; }
-.badge-done { background: #62665d; }
+.badge-tolist { background: #4b62a5; }
+.badge-listed { background: #7446c2; }
+.badge-pending { background: #9c5510; }
+.badge-sold { background: #b8347a; }
+.badge-done { background: #6a6475; }
 
 .price-tag {
   position: absolute;
@@ -426,7 +433,7 @@ body[data-page="money"] .page { padding-bottom: calc(var(--tabbar-h) + 40px + en
   left: 8px;
   padding: 3px 9px;
   border-radius: 9px;
-  background: rgba(15, 18, 13, 0.78);
+  background: rgba(43, 26, 60, 0.82);
   color: #fff;
   font: 700 15px/1.4 var(--font);
 }
@@ -466,7 +473,7 @@ body[data-page="money"] .page { padding-bottom: calc(var(--tabbar-h) + 40px + en
   height: 22px;
   padding: 0 4px;
   border-radius: 6px;
-  background: #6b6f66;
+  background: #6a6475;
   color: #fff;
   font: 800 10px/1 var(--font);
   letter-spacing: 0.02em;
@@ -480,7 +487,7 @@ body[data-page="money"] .page { padding-bottom: calc(var(--tabbar-h) + 40px + en
 .p-mercari { background: #3a55d8; color: #fff; }
 .p-ebay { background: #e53238; color: #fff; }
 .p-poshmark { background: #7f0353; color: #fff; }
-.p-person { background: #6b6f66; color: #fff; }
+.p-person { background: #6a6475; color: #fff; }
 
 /* ---------- one item ---------- */
 
@@ -505,7 +512,7 @@ body[data-page="money"] .page { padding-bottom: calc(var(--tabbar-h) + 40px + en
   right: 12px;
   padding: 3px 10px;
   border-radius: 99px;
-  background: rgba(15, 18, 13, 0.7);
+  background: rgba(43, 26, 60, 0.72);
   color: #fff;
   font: 600 13px/1.5 var(--font);
   pointer-events: none;
@@ -746,7 +753,7 @@ body[data-page="money"] .page { padding-bottom: calc(var(--tabbar-h) + 40px + en
 
 /* ---------- bottom sheets ---------- */
 
-.sheet-backdrop { position: fixed; inset: 0; z-index: 50; background: rgba(10, 12, 8, 0.45); animation: fade 0.18s ease-out; }
+.sheet-backdrop { position: fixed; inset: 0; z-index: 50; background: rgba(30, 16, 45, 0.45); animation: fade 0.18s ease-out; }
 .sheet {
   position: fixed;
   left: 0;
@@ -791,7 +798,7 @@ body[data-page="money"] .page { padding-bottom: calc(var(--tabbar-h) + 40px + en
 
 /* ---------- busy, toast ---------- */
 
-#busy { position: fixed; inset: 0; z-index: 80; display: none; place-items: center; background: rgba(10, 12, 8, 0.35); }
+#busy { position: fixed; inset: 0; z-index: 80; display: none; place-items: center; background: rgba(30, 16, 45, 0.35); }
 #busy.on { display: grid; }
 .busy-box { display: flex; flex-direction: column; align-items: center; gap: 12px; min-width: 200px; padding: 22px 24px; border-radius: 18px; background: var(--surface); box-shadow: var(--shadow-lift); }
 .busy-box p { margin: 0; font-weight: 600; }
@@ -811,10 +818,12 @@ body[data-page="money"] .page { padding-bottom: calc(var(--tabbar-h) + 40px + en
   left: 50%;
   bottom: calc(var(--tabbar-h) + 18px + env(safe-area-inset-bottom));
   z-index: 90;
+  /* Without an explicit width, a box pinned at left: 50% only gets half the screen to wrap in. */
+  width: max-content;
   max-width: min(440px, calc(100vw - 32px));
   padding: 12px 18px;
   border-radius: 14px;
-  background: #1f231d;
+  background: #2b2335;
   color: #fff;
   font-weight: 600;
   font-size: 15px;
@@ -829,7 +838,7 @@ body[data-page="money"] .page { padding-bottom: calc(var(--tabbar-h) + 40px + en
 /* No tab bar on these pages, so sit at the bottom instead of mid-screen. */
 body:not([data-page="items"]):not([data-page="money"]) #toast { bottom: calc(16px + env(safe-area-inset-bottom)); }
 #toast.bad { background: var(--danger); color: #fff; }
-@media (prefers-color-scheme: dark) { #toast { background: #eef0ea; color: #11140f; } #toast.bad { background: #c4382a; color: #fff; } }
+@media (prefers-color-scheme: dark) { #toast { background: #efe6fc; color: #1f1233; } #toast.bad { background: #b3261e; color: #fff; } }
 
 @keyframes spin { to { transform: rotate(360deg); } }
 @keyframes fade { from { opacity: 0; } }
@@ -837,4 +846,41 @@ body:not([data-page="items"]):not([data-page="money"]) #toast { bottom: calc(16p
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
+}
+
+/* ---------- editing feedback ---------- */
+
+.topbar-title { display: flex; align-items: center; justify-content: center; gap: 8px; }
+.saved {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  color: var(--accent);
+  font: 600 13px/1 var(--font);
+  opacity: 0;
+  transition: opacity 0.25s;
+}
+.saved svg { width: 15px; height: 15px; stroke-width: 2.4; }
+.saved.on { opacity: 1; }
+.save-hint { margin: -6px 0 14px; }
+
+.btn-dashed {
+  margin-top: 16px;
+  border: 2px dashed var(--line-strong);
+  background: transparent;
+  color: var(--ink-2);
+}
+.btn-dashed svg { color: var(--accent); }
+
+#toast.has-action { display: flex; align-items: center; gap: 14px; padding: 8px 8px 8px 18px; pointer-events: auto; text-align: left; }
+.toast-btn {
+  flex: none;
+  min-height: 40px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 10px;
+  background: var(--grad-a);
+  color: #fff;
+  font: 700 15px var(--font);
+  cursor: pointer;
 }

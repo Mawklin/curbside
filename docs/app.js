@@ -4,7 +4,7 @@ import { PLATFORMS, DEFAULT_PLATFORMS, PRICE_CHECKS, platform, platformName } fr
 import { buildDescription, copyAllText, shareText, aiSharePrompt, parseAiReply } from './listing.js';
 import {
   newItem, markListed, renewListing, takeDown, setPrice, setPending, fellThrough, markSold, undoSale,
-  markDone, bringBack, activeListings, profit, monthly, toCsv,
+  markDone, bringBack, activeListings, profit, monthly, toCsv, isBlank,
 } from './model.js';
 import {
   makePhoto, rotated, smallJpeg, base64, loadUrls, rememberUrls, forgetUrls, photoFiles,
@@ -13,11 +13,11 @@ import { suggestListing, findKey, CANCELLED, GEMINI_MODELS } from './ai.js';
 import { makeZip, readZip } from './zip.js';
 import {
   itemsView, gridHtml, chipsHtml, itemView, statusPanel, postPickView, kitView, moneyView, settingsView,
-  sheetView, monthChart, monthCaption,
+  sheetView, monthChart, monthCaption, ICON,
 } from './views.js';
 
 // Bump together with CACHE in sw.js on every release, or installed phones keep old files.
-const VERSION = '1.0.0';
+const VERSION = '1.1.0';
 
 const DEFAULT_SETTINGS = {
   pickupArea: '',
@@ -71,13 +71,33 @@ const currentItem = () => (state.route.id ? findItem(state.route.id) : null);
 // ---------- feedback ----------
 
 let toastTimer;
-function toast(message, bad = false) {
+let toastAction = null;
+// action: { label, run } adds a button (e.g. Undo) and keeps the message up longer.
+function toast(message, bad = false, action = null) {
   const el = $('#toast');
-  el.textContent = message;
+  toastAction = action;
+  el.innerHTML = `<span>${esc(message)}</span>${action ? `<button class="toast-btn" data-action="toast-action">${esc(action.label)}</button>` : ''}`;
   el.classList.toggle('bad', bad);
+  el.classList.toggle('has-action', Boolean(action));
   el.classList.add('show');
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => el.classList.remove('show'), bad ? 4500 : 2600);
+  toastTimer = setTimeout(hideToast, action ? 8000 : bad ? 4500 : 2600);
+}
+
+function hideToast() {
+  $('#toast').classList.remove('show', 'has-action');
+  toastAction = null;
+}
+
+// A quiet "Saved" next to the status after typing, so she knows there's no Save button to find.
+let savedTimer;
+function showSaved() {
+  const el = $('#saved');
+  if (!el) return;
+  el.innerHTML = `${ICON.check}<span>Saved</span>`;
+  el.classList.add('on');
+  clearTimeout(savedTimer);
+  savedTimer = setTimeout(() => el.classList.remove('on'), 1600);
 }
 
 function setBusy(text) {
@@ -109,6 +129,7 @@ async function flush(id) {
   clearTimeout(q.timer);
   try {
     await db.saveItem(q.item);
+    if (q.item.id === state.route.id) showSaved();
   } catch (err) {
     fail(err);
   }
@@ -183,6 +204,16 @@ async function route() {
     r = { name: parts[2] === 'post' ? (parts[3] ? 'kit' : 'post') : 'item', id: parts[1], platform: parts[3] };
   } else if (parts[0] === 'money') r = { name: 'money' };
   else if (parts[0] === 'settings') r = { name: 'settings' };
+
+  // Tapped "Add without a photo" and then left without typing anything: don't leave an empty card.
+  if (prev.id && prev.id !== r.id) {
+    const left = findItem(prev.id);
+    if (left && isBlank(left)) {
+      queued.delete(left.id);
+      state.items = state.items.filter((i) => i !== left);
+      db.deleteItem(left).catch(console.error);
+    }
+  }
 
   state.sheet = null;
   state.ai?.abort?.abort();
@@ -857,19 +888,43 @@ const actions = {
     const check = PRICE_CHECKS.find((c) => c.id === el.dataset.check);
     if (check) window.open(check.url(title), '_blank', 'noopener');
   },
+  // No "are you sure?": it deletes straight away and offers Undo instead, which is quicker and
+  // just as safe. The photos are kept in memory until the Undo button goes away.
   async 'delete-item'() {
     const item = currentItem();
-    if (!confirm(`Delete "${item.title || 'this item'}" and its photos? This can't be undone.`)) return;
+    if (!item) return;
     try {
+      clearTimeout(queued.get(item.id)?.timer);
       queued.delete(item.id);
+      const photos = await db.photosFor(item.id);
       await db.deleteItem(item);
       forgetUrls(item.photos);
       state.items = state.items.filter((i) => i.id !== item.id);
-      toast('Deleted');
       goTo('#/');
+      toast(`Deleted "${item.title?.trim() || 'Untitled find'}"`, false, {
+        label: 'Undo',
+        async run() {
+          await db.saveItem(item, photos);
+          state.items.push(item);
+          await loadUrls(item.photos);
+          if (state.route.name === 'items') refreshGrid();
+          toast('Put back');
+        },
+      });
     } catch (err) {
       fail(err);
     }
+  },
+  async 'toast-action'() {
+    const action = toastAction;
+    hideToast();
+    if (action) await action.run();
+  },
+  async 'add-blank'() {
+    const item = newItem();
+    state.items.unshift(item);
+    await save(item);
+    goTo(`#/item/${item.id}`);
   },
 
   'save-photos'() {

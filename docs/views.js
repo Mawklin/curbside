@@ -150,14 +150,16 @@ export function gridHtml(s) {
       <h2>Found something good?</h2>
       <p>Snap it and Curbside keeps the photos, price and where it's posted together, then gets everything ready to paste into Marketplace, OfferUp and the rest.</p>
       ${photoPicker('new', `${ICON.camera}<span>Add your first find</span>`, 'btn btn-primary btn-big')}
+      <p><button class="link" data-action="add-blank">or add one without a photo</button></p>
     </section>`;
   }
+  const addBlank = `<button class="btn btn-block btn-dashed" data-action="add-blank">${ICON.plus} Add an item without a photo</button>`;
   const list = visibleItems(s);
   if (!list.length) {
     const msg = s.query.trim() ? `Nothing matches "${esc(s.query.trim())}".` : 'Nothing here right now.';
-    return `<p class="empty">${msg}</p>`;
+    return `<p class="empty">${msg}</p>${addBlank}`;
   }
-  return `<div class="grid">${list.map((i) => itemCard(i, s)).join('')}</div>`;
+  return `<div class="grid">${list.map((i) => itemCard(i, s)).join('')}</div>${addBlank}`;
 }
 
 function todoStrip(s) {
@@ -323,11 +325,12 @@ const options = (list, current, blank) => `${blank ? `<option value="">${blank}<
 function detailsCard(item) {
   return `<section class="card">
     <div class="card-head"><h2>Listing</h2><button class="btn btn-small btn-ai" data-action="ai">${ICON.sparkle} Write it for me</button></div>
+    <p class="hint save-hint">Tap any box to change it. Everything saves as you type.</p>
     <label class="field"><span class="field-label">Title</span>
       <input data-field="title" value="${esc(item.title)}" placeholder="e.g. Solid wood dresser, 6 drawers" maxlength="120" autocapitalize="sentences" enterkeyhint="next"></label>
     <div class="field-row">
       <label class="field"><span class="field-label">Price</span>
-        <span class="money-wrap"><span>$</span><input data-field="price" value="${esc(moneyInput(item.price))}" inputmode="decimal" placeholder="0" enterkeyhint="next"></span></label>
+        <span class="money-wrap"><span>$</span><input data-field="price" value="${esc(moneyInput(item.price))}" inputmode="decimal" enterkeyhint="next"></span></label>
       <label class="field"><span class="field-label">Lowest I'd take</span>
         <span class="money-wrap"><span>$</span><input data-field="floor" value="${esc(moneyInput(item.floor))}" inputmode="decimal" placeholder="optional" enterkeyhint="next"></span></label>
     </div>
@@ -383,7 +386,8 @@ const historyCard = (item) => `<details class="card history">
 </details>`;
 
 export function itemView(s, item) {
-  return `${subbar(`<span class="badge badge-${item.status}">${STATUSES[item.status].label}</span>`)}
+  return `${subbar(`<span class="badge badge-${item.status}">${STATUSES[item.status].label}</span><span class="saved" id="saved" aria-live="polite"></span>`,
+    `<button class="icon-btn" data-action="delete-item" aria-label="Delete this item">${ICON.trash}</button>`)}
   <main class="page page-item">
     ${gallery(item)}
     ${statusPanel(s, item)}

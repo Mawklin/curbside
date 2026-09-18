@@ -6,7 +6,7 @@ import { parseMoney, money, pickupLabel, csvCell } from '../docs/util.js';
 import { buildDescription, copyAllText, parseAiReply, matchCategory, matchCondition, titleWarning, conditionFor } from '../docs/listing.js';
 import {
   newItem, markListed, takeDown, setPrice, setPending, fellThrough, markSold, undoSale, markDone, bringBack,
-  activeListings, profit, daysToSell, summarize, monthly, todo, priceDrops, isStale, toCsv, renewListing,
+  activeListings, profit, daysToSell, summarize, monthly, todo, priceDrops, isStale, toCsv, renewListing, isBlank,
 } from '../docs/model.js';
 import { makeZip, readZip, crc32 } from '../docs/zip.js';
 
@@ -154,6 +154,15 @@ test('stale listings and price drops', () => {
   assert.deepEqual(priceDrops(120), [110, 95], 'rounded by the original price, not the dropped one');
   assert.deepEqual(priceDrops(5), [4.5, 4]);
   assert.deepEqual(priceDrops(1), []);
+});
+
+test('an untouched item counts as blank, anything typed does not', () => {
+  const item = newItem(T0);
+  assert.equal(isBlank(item), true);
+  assert.equal(isBlank({ ...item, title: 'Hose reel' }), false);
+  assert.equal(isBlank({ ...item, price: 0 }), false, 'a $0 (free) price is still something she typed');
+  assert.equal(isBlank({ ...item, photos: ['p'] }), false);
+  assert.equal(isBlank({ ...item, notes: 'x' }), false);
 });
 
 test('to-do lists', () => {

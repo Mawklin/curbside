@@ -214,6 +214,44 @@ await page.waitForFunction(() => document.querySelector('[data-field="title"]')?
 assert.equal(await page.inputValue('[data-field="condition"]'), 'likenew');
 step('one-tap AI (mocked Gemini) sends the photo and fills the listing');
 
+// 7b. Adding without a photo, the Saved note, deleting with Undo
+await page.goto(BASE);
+await page.waitForSelector('#grid');
+const cards = () => page.locator('.grid .item-card').count();
+const before = await cards();
+await page.click('[data-action="add-blank"]');
+await page.waitForURL(/#\/item\/[^/]+$/);
+await page.click('[data-action="back"]');
+await page.waitForSelector('#grid');
+assert.equal(await cards(), before, 'an untouched blank item is cleared away');
+step('empty "add without a photo" item is cleared when she backs out');
+
+await page.click('[data-action="add-blank"]');
+await page.waitForURL(/#\/item\/[^/]+$/);
+await page.fill('[data-field="title"]', 'Garden hose reel');
+await page.waitForSelector('#saved.on');
+await shot('19-saved-note');
+await page.click('[data-action="back"]');
+await page.waitForSelector('#grid');
+assert.equal(await cards(), before + 1);
+step('item without a photo kept once it has a title; "Saved" shows while typing');
+
+await page.click('.item-card:has-text("Garden hose reel")');
+await page.waitForSelector('.topbar [data-action="delete-item"]');
+await page.click('.topbar [data-action="delete-item"]');
+await page.waitForSelector('#grid');
+await page.waitForSelector('#toast.has-action');
+assert.match(await toastText(), /Deleted "Garden hose reel"/);
+assert.equal(await cards(), before);
+await page.waitForTimeout(300); // toast fades in
+await shot('20-undo-toast');
+await page.click('#toast [data-action="toast-action"]');
+await page.waitForFunction((n) => document.querySelectorAll('.grid .item-card').length === n, before + 1);
+await page.reload();
+await page.waitForSelector('#grid');
+assert.equal(await cards(), before + 1, 'undo survives a reload');
+step('delete from the top bar, then Undo brings it back (and it stays back)');
+
 // 8. Restore the demo backup
 await page.goto(`${BASE}#/settings`);
 await page.setInputFiles('[data-pick="restore"]', `${DEMO}/demo-backup.zip`);

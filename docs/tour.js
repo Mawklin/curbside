@@ -155,13 +155,13 @@ export const TOURS = {
   // On iPhone in Safari: the Home Screen app keeps separate data, so the only job is to install.
   safari: () => [{
     target: '.notice-install',
-    title: 'First, put Curbside on your Home Screen',
-    text: 'Tap <b>Share</b> at the bottom of Safari, then <b>Add to Home Screen</b>, and open Curbside from there from now on. The Home Screen app keeps its own copy of your finds, separate from Safari, and a quick tour will show you around.',
+    title: 'First, put trash2treasure on your Home Screen',
+    text: 'Tap <b>Share</b> at the bottom of Safari, then <b>Add to Home Screen</b>, and open trash2treasure from there from now on. The Home Screen app keeps its own copy of your finds, separate from Safari, and a quick tour will show you around.',
     done: 'Got it',
   }],
 
   home: () => [
-    { title: 'Welcome to Curbside 💜', text: "Here's a one-minute tour of the app. You can skip it any time, and replay it from Settings." },
+    { title: 'Welcome to trash2treasure 💜', text: "Here's a one-minute tour of the app. You can skip it any time, and replay it from Settings." },
     { target: '.tab-snap', title: 'Add a find', text: "Found something good? Tap the camera to take a photo or pick one from your camera roll. It's saved straight away, so you can fill in the details whenever you like." },
     { target: '[data-action="add-blank"]', title: 'No photo yet?', text: 'Add it without one and put the photos in later.' },
     { target: '.todo-strip', title: 'Your to-do list', text: 'Pickups coming up, finds ready to post, and listings that need a price drop show up here.' },
@@ -169,7 +169,7 @@ export const TOURS = {
     { target: '.tabbar .tab[href="#/"]', title: 'Items', text: "Everything you've found lives here. Tap a find to see it, change it, post it or mark it sold." },
     { target: '.tabbar .tab[href="#/money"]', title: 'Money', text: "What you've made this month and all time, which site sells best, and a spreadsheet download." },
     { target: '.topbar a[href="#/settings"]', title: 'Settings', text: 'Holiday themes, your pickup area and the line added to every listing, which sites you use, the free AI helper, and backups.' },
-    { target: '.notice-install', title: 'Install it', text: 'Tap <b>Install</b> so Curbside opens like an app and works with no signal.' },
+    { target: '.notice-install', title: 'Install it', text: 'Tap <b>Install</b> so trash2treasure opens like an app and works with no signal.' },
     { target: '.notice-backup', title: 'Back up now and then', text: 'Your finds live only on this phone. A backup keeps a copy you can bring back if the phone is lost or reset.' },
     { title: "You're all set!", text: 'Tap the camera to add your first find. The first time you open a find, post one or check your money, a quick tour shows you what\'s there.', done: "Let's go" },
   ],
@@ -188,7 +188,7 @@ export const TOURS = {
 
   post: () => [
     { target: '.platform-grid', title: 'Pick your sites', text: 'Tick every site you want to post on. Next time, the same ones are ticked for you.' },
-    { target: '.start-bar', title: 'Post them all', text: 'Curbside takes you through each site in turn. You save the photos once, then copy and paste for each one.' },
+    { target: '.start-bar', title: 'Post them all', text: 'trash2treasure takes you through each site in turn. You save the photos once, then copy and paste for each one.' },
     { target: '[data-action="share-all"]', title: 'Anywhere else', text: 'Sends the photos and description to a Facebook group, a text, or any app on your phone.', done: 'Got it' },
   ],
 
@@ -197,7 +197,7 @@ export const TOURS = {
     { target: '.steps .step:nth-child(1)', title: '1. Save the photos', text: 'Puts them in your camera roll, ready to pick in the other app.' },
     { target: '.btn-platform', title: '2. Open the app', text: "Opens the site's sell page. Add the photos you just saved." },
     { target: '.steps .step:nth-child(3) .copy-row', title: '3. Copy, then paste', text: 'Tap <b>Copy</b>, switch to the other app, press and hold in the box and tap <b>Paste</b>. Do the same for the title, price and description.' },
-    { target: '[data-action="mark-listed"]', title: '4. Tell Curbside', text: "Once it's up, tap here so Curbside knows where it's posted.", done: 'Got it' },
+    { target: '[data-action="mark-listed"]', title: '4. Tell the app', text: "Once it's up, tap here so trash2treasure knows where it's posted.", done: 'Got it' },
   ],
 
   money: () => [

@@ -221,7 +221,7 @@ test('backup zip round-trips, including photos', async () => {
   assert.equal(JSON.parse(await back.text('curbside.json')).items[0].title, 'Café table');
   assert.deepEqual(await back.bytes('photos/p1.jpg'), photo);
   assert.equal(crc32(new TextEncoder().encode('The quick brown fox jumps over the lazy dog')), 0x414fa339);
-  await assert.rejects(readZip(new Blob(['not a zip at all'])), /isn't a Curbside backup/);
+  await assert.rejects(readZip(new Blob(['not a zip at all'])), /isn't a trash2treasure backup/);
 });
 
 // ---------- v1.2: size, photo checklist, buyer replies, pickup calendar ----------
@@ -275,7 +275,7 @@ test('pickup calendar event: Google link and .ics file', () => {
   assert.ok(ics.startsWith('BEGIN:VCALENDAR\r\n'));
   const unfolded = ics.replace(/\r\n /g, '');
   assert.ok(unfolded.includes('SUMMARY:Pickup: Oak desk\\, solid\\; heavy (Jordan)'), 'commas and semicolons escaped');
-  assert.ok(unfolded.includes('DESCRIPTION:Buyer: Jordan\\nAgreed price: $30\\nNote: Bringing a truck\\nFrom Curbside'));
+  assert.ok(unfolded.includes('DESCRIPTION:Buyer: Jordan\\nAgreed price: $30\\nNote: Bringing a truck\\nFrom trash2treasure'));
   assert.ok(ics.includes('TRIGGER:-PT30M'));
   assert.ok(ics.split('\r\n').every((line) => line.length <= 75), 'long lines folded');
   assert.equal(pickupEvent({ ...item, pending: { buyer: 'x' } }), null, 'no time, no event');

@@ -23,7 +23,7 @@ export function db() {
         resolve(d);
       };
       req.onerror = () => reject(req.error);
-      req.onblocked = () => reject(new Error('Close Curbside in your other tabs, then try again.'));
+      req.onblocked = () => reject(new Error('Close trash2treasure in your other tabs, then try again.'));
     });
     opening.catch(() => { opening = null; });
   }
@@ -42,7 +42,7 @@ const finished = (t) => new Promise((resolve, reject) => {
 });
 
 function friendly(err) {
-  if (err?.name === 'QuotaExceededError') return new Error("Your phone is out of space for Curbside. Free some space, or back up and delete old sold items.");
+  if (err?.name === 'QuotaExceededError') return new Error("Your phone is out of space for trash2treasure. Free some space, or back up and delete old sold items.");
   return err || new Error("Couldn't save. Try again.");
 }
 

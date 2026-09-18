@@ -52,7 +52,7 @@ export function hanukkah(y) {
 
 // lead: days before the holiday the theme starts; linger: days it stays after.
 export const THEMES = [
-  { id: 'curbside', name: 'Curbside', when: 'The original', emoji: [], icon: ['💜', '🏷️', '✨'] },
+  { id: 'curbside', name: 'Original', when: 'Purple and pink', emoji: [], icon: ['💜', '🏷️', '✨'] },
   { id: 'newyear', name: "New Year's", when: 'Jan 1', emoji: ['🎆', '🥂', '🎉', '✨', '🎊'], date: (y) => at(y, 1, 1), lead: 1, linger: 2 },
   { id: 'mlk', name: 'MLK Day', when: '3rd Mon in Jan', emoji: ['🕊️', '🤝', '💙', '✨'], date: (y) => nthWeekday(y, 1, 1, 3), lead: 6, linger: 0 },
   { id: 'valentines', name: "Valentine's Day", when: 'Feb 14', emoji: ['💕', '💌', '🌹', '💘', '🍫'], date: (y) => at(y, 2, 14), lead: 13, linger: 0 },

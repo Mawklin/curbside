@@ -126,7 +126,7 @@ export function forgetUrls(ids) {
 // Full-size photos as Files, ready to hand to the share sheet or save.
 export async function photoFiles(item) {
   const files = [];
-  const base = (item.title || 'curbside').replace(/[^\w]+/g, '-').replace(/^-|-$/g, '').slice(0, 40).toLowerCase() || 'curbside';
+  const base = (item.title || 'trash2treasure').replace(/[^\w]+/g, '-').replace(/^-|-$/g, '').slice(0, 40).toLowerCase() || 'trash2treasure';
   for (const [n, id] of item.photos.entries()) {
     const photo = await get('photos', id);
     if (photo?.full) files.push(new File([photo.full], `${base}-${n + 1}.jpg`, { type: 'image/jpeg' }));

@@ -1,4 +1,4 @@
-/* Curbside. Deep purple with pink and lavender, white text, no white panels (her ask).
+/* trash2treasure. Deep purple with pink and lavender, white text, no white panels (her ask).
    One look on every phone, whatever its light/dark setting. Every text colour here is checked
    by tools/check-contrast.mjs; run it after any colour change. */
 
@@ -128,6 +128,7 @@ body[data-page="money"] .page { padding-bottom: calc(var(--tabbar-h) + 40px + en
 
 .brand { display: flex; align-items: center; gap: 10px; }
 .brand h1 { font-size: 24px; font-weight: 800; letter-spacing: -0.01em; }
+.brand-two { color: var(--accent); }
 .brand-mark {
   display: grid;
   place-items: center;

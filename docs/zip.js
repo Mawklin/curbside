@@ -86,7 +86,7 @@ export async function readZip(blob) {
   let end = buf.length - 22;
   const stop = Math.max(0, buf.length - 22 - 65535);
   while (end >= stop && view.getUint32(end, true) !== 0x06054b50) end--;
-  if (end < stop) throw new Error("That file isn't a Curbside backup.");
+  if (end < stop) throw new Error("That file isn't a trash2treasure backup.");
 
   const count = view.getUint16(end + 10, true);
   let p = view.getUint32(end + 16, true);

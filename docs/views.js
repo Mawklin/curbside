@@ -156,7 +156,7 @@ export function gridHtml(s) {
     return `<section class="welcome">
       <div class="welcome-art${sticker(s) ? ' emoji' : ''}" aria-hidden="true">${sticker(s) || ICON.tag}</div>
       <h2>Found something good?</h2>
-      <p>Snap it and Curbside keeps the photos, price and where it's posted together, then gets everything ready to paste into Marketplace, OfferUp and the rest.</p>
+      <p>Snap it and trash2treasure keeps the photos, price and where it's posted together, then gets everything ready to paste into Marketplace, OfferUp and the rest.</p>
       ${photoPicker('new', `${ICON.camera}<span>Add your first find</span>`, 'btn btn-primary btn-big')}
       <p><button class="link" data-action="add-blank">or add one without a photo</button></p>
     </section>`;
@@ -188,14 +188,14 @@ function installCard(s) {
   if (s.standalone || s.settings.hideInstall) return '';
   if (s.isIOS) {
     return `<section class="notice notice-install">
-      <div><strong>Put Curbside on your Home Screen</strong>
+      <div><strong>Put trash2treasure on your Home Screen</strong>
       <p>In Safari tap ${ICON.share} Share, then <b>Add to Home Screen</b>. It opens like an app, and Home Screen apps keep their data (Safari can clear websites you haven't opened in a while).</p></div>
       <button class="icon-btn" data-action="dismiss-install" aria-label="Hide">${ICON.close}</button>
     </section>`;
   }
   if (s.installEvent) {
     return `<section class="notice notice-install">
-      <div><strong>Install Curbside</strong><p>Opens like an app and works with no signal.</p>
+      <div><strong>Install trash2treasure</strong><p>Opens like an app and works with no signal.</p>
       <button class="btn btn-small btn-primary" data-action="install">Install</button></div>
       <button class="icon-btn" data-action="dismiss-install" aria-label="Hide">${ICON.close}</button>
     </section>`;
@@ -237,7 +237,7 @@ function resumeCard(s) {
 
 export function itemsView(s) {
   return `<header class="topbar">
-    <div class="brand"><span class="brand-mark">${ICON.tag}</span><h1>Curbside</h1>${sticker(s) ? `<span class="brand-emoji" aria-hidden="true">${sticker(s)}</span>` : ''}</div>
+    <div class="brand"><span class="brand-mark">${ICON.tag}</span><h1>trash<span class="brand-two">2</span>treasure</h1>${sticker(s) ? `<span class="brand-emoji" aria-hidden="true">${sticker(s)}</span>` : ''}</div>
     <a class="icon-btn" href="#/settings" aria-label="Settings">${ICON.gear}</a>
   </header>
   <main class="page page-items">
@@ -695,7 +695,7 @@ function themeCard(s) {
     </button>`;
   return `<section class="card" id="theme-card">
     <h2>🎨 App theme</h2>
-    <p class="hint">Pick a look. <b>Automatic</b> switches to each holiday's theme as it comes up, and back to Curbside in between.</p>
+    <p class="hint">Pick a look. <b>Automatic</b> switches to each holiday's theme as it comes up, and back to the original purple in between.</p>
     <div class="theme-grid">
       ${tile('auto', 'Automatic', `Right now: ${now.name}`, ['🗓️', ...(now.emoji.length ? now.emoji : now.icon).slice(0, 2)], now.id)}
       ${THEMES.map((t) => tile(t.id, t.name, t.when, t.emoji.length ? t.emoji : t.icon, t.id)).join('')}
@@ -756,9 +756,9 @@ export function settingsView(s) {
     <section class="card">
       <h2>This phone</h2>
       <p>${plural(s.items.length, 'item')}${used !== undefined ? ` · using ${(used / 1048576).toFixed(1)} MB` : ''}</p>
-      ${s.persisted === true ? `<p class="hint">${ICON.check} The browser has agreed not to clear Curbside's data.</p>` : ''}
+      ${s.persisted === true ? `<p class="hint">${ICON.check} The browser has agreed not to clear trash2treasure's data.</p>` : ''}
       ${s.persisted === false && !s.isIOS ? '<button class="btn btn-small" data-action="persist">Ask the browser to keep my data</button>' : ''}
-      ${!s.standalone ? `<p class="hint">${s.isIOS ? 'Tip: add Curbside to your Home Screen (Share, then Add to Home Screen) so Safari never clears it.' : 'Tip: install Curbside from your browser menu so it opens like an app.'}</p>` : ''}
+      ${!s.standalone ? `<p class="hint">${s.isIOS ? 'Tip: add trash2treasure to your Home Screen (Share, then Add to Home Screen) so Safari never clears it.' : 'Tip: install trash2treasure from your browser menu so it opens like an app.'}</p>` : ''}
       ${s.settings.hideInstall && !s.standalone ? '<button class="btn btn-small btn-ghost" data-action="show-install">Show the install tip again</button>' : ''}
     </section>
 
@@ -770,11 +770,11 @@ export function settingsView(s) {
 
     <section class="card card-danger">
       <h2>Wipe app</h2>
-      <p>Deletes every item, photo and setting in Curbside on this phone. Nothing else on the phone is touched. Back up first if you might want them.</p>
+      <p>Deletes every item, photo and setting in trash2treasure on this phone. Nothing else on the phone is touched. Back up first if you might want them.</p>
       <label class="check"><input type="checkbox" id="wipe-ok"> I understand</label>
-      <button class="btn btn-danger btn-block" data-action="wipe" id="wipe-btn" disabled>Wipe Curbside</button>
+      <button class="btn btn-danger btn-block" data-action="wipe" id="wipe-btn" disabled>Wipe trash2treasure</button>
     </section>
-    <p class="version">Curbside ${esc(s.version)}</p>
+    <p class="version">trash2treasure ${esc(s.version)}</p>
   </main>`;
 }
 

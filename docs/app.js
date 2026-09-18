@@ -21,7 +21,7 @@ import {
 } from './views.js';
 
 // Bump together with CACHE in sw.js on every release, or installed phones keep old files.
-const VERSION = '1.4.0';
+const VERSION = '1.4.1';
 
 const DEFAULT_SETTINGS = {
   pickupArea: '',
@@ -679,8 +679,8 @@ async function applySuggestion() {
 
 // ---------- backup ----------
 
-const README = `This is a backup of the Curbside app.
-To bring it back: open Curbside, go to Settings, tap "Restore from a backup" and pick this file.
+const README = `This is a backup of the trash2treasure app.
+To bring it back: open trash2treasure, go to Settings, tap "Restore from a backup" and pick this file.
 curbside.json has every item; photos/ has the listing photos; inventory.csv opens in Excel or Google Sheets.
 `;
 
@@ -707,7 +707,7 @@ async function buildBackup() {
     { name: 'README.txt', data: README },
     ...files,
   ]);
-  return new File([zip], `curbside-backup-${isoDay(Date.now())}.zip`, { type: 'application/zip' });
+  return new File([zip], `trash2treasure-backup-${isoDay(Date.now())}.zip`, { type: 'application/zip' });
 }
 
 async function markBackedUp() {
@@ -775,10 +775,10 @@ async function restore(file) {
     setBusy('Opening backup…');
     const zip = await readZip(file);
     const jsonName = zip.names.find((n) => /(^|\/)curbside\.json$/.test(n) && !n.startsWith('__MACOSX'));
-    if (!jsonName) throw new Error("That file isn't a Curbside backup.");
+    if (!jsonName) throw new Error("That file isn't a trash2treasure backup.");
     const dir = jsonName.slice(0, -'curbside.json'.length);
     const data = JSON.parse(await zip.text(jsonName));
-    if (data?.app !== 'curbside' || !Array.isArray(data.items)) throw new Error("That file isn't a Curbside backup.");
+    if (data?.app !== 'curbside' || !Array.isArray(data.items)) throw new Error("That file isn't a trash2treasure backup.");
     const photoInfo = new Map((data.photos || []).map((p) => [p.id, p]));
     let added = 0;
     let updated = 0;
@@ -1230,7 +1230,7 @@ const actions = {
     render();
   },
   'export-csv'() {
-    const file = new File([toCsv(state.items)], `curbside-${isoDay(Date.now())}.csv`, { type: 'text/csv' });
+    const file = new File([toCsv(state.items)], `trash2treasure-${isoDay(Date.now())}.csv`, { type: 'text/csv' });
     if (state.isIOS && state.canShareFiles) navigator.share({ files: [file] }).catch(() => {});
     else download(file, file.name);
   },
@@ -1294,7 +1294,7 @@ const actions = {
   },
   async wipe() {
     if (!$('#wipe-ok')?.checked) return;
-    if (!confirm('Delete everything in Curbside on this phone? This cannot be undone.')) return;
+    if (!confirm('Delete everything in trash2treasure on this phone? This cannot be undone.')) return;
     try {
       await db.wipe();
       forgetUrls(state.items.flatMap((i) => i.photos));
@@ -1302,7 +1302,7 @@ const actions = {
       state.settings = { ...DEFAULT_SETTINGS };
       state.lastBackup = null;
       applyTheme();
-      toast('Curbside is empty.');
+      toast('trash2treasure is empty.');
       goTo('#/');
       render();
     } catch (err) {
@@ -1424,7 +1424,7 @@ function onFocusIn(e) {
 
 async function start() {
   if (window.top !== window.self) {
-    document.body.textContent = 'Open Curbside in its own tab.';
+    document.body.textContent = 'Open trash2treasure in its own tab.';
     return;
   }
   try {
@@ -1441,7 +1441,7 @@ async function start() {
     applyTheme();
   } catch (err) {
     console.error(err);
-    $('#app').innerHTML = `<main class="page"><section class="notice notice-warn"><div><strong>Curbside can't save on this browser</strong>
+    $('#app').innerHTML = `<main class="page"><section class="notice notice-warn"><div><strong>trash2treasure can't save on this browser</strong>
       <p>${esc(err?.message || '')} Private browsing blocks storage. Open it in a normal Safari or Chrome tab.</p></div></section></main>`;
     return;
   }

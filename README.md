@@ -1,8 +1,13 @@
-# Curbside
+# trash2treasure
 
 A phone app for flipping curbside finds. Snap a photo, price it, get it ready to post on Facebook
 Marketplace, OfferUp, Craigslist, Nextdoor, Mercari, eBay or Poshmark, and track it all the way to
 sold and how much you made.
+
+Renamed from Curbside on 2026-09-18. The web address (mawklin.github.io/curbside), the repo and the
+internal names (IndexedDB `curbside`, the `curbside-theme` key, cache names, the backup's `curbside.json`
+and `app: 'curbside'` marker, theme id `curbside`) deliberately kept the old name: changing them would
+cut her installed app off from her saved finds and old backups.
 
 It's a plain web app (HTML/CSS/JS in `docs/`, no build step) that installs to the Home Screen and
 works offline. **Everything is stored on the phone** (IndexedDB), so nobody else can see her
@@ -12,7 +17,7 @@ inventory and there's no server to pay for.
 
 - **Look**: deep purple with pink and lavender and white text, the same on every phone (she asked for no
   white panels). Every text colour is checked with `node tools/check-contrast.mjs`.
-- **App theme** (Settings, first card): the original Curbside purple, a theme for each major American
+- **App theme** (Settings, first card): the original purple, a theme for each major American
   holiday (New Year's, MLK Day, Valentine's, Presidents' Day, St. Patrick's, Easter, Mother's Day,
   Memorial Day, Father's Day, Juneteenth, Fourth of July, Labor Day, Halloween, Veterans Day,
   Thanksgiving, Hanukkah, Christmas, Kwanzaa), or Automatic, which follows the calendar (Easter and

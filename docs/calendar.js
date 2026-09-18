@@ -13,7 +13,7 @@ export function pickupEvent(item, settings = {}) {
   if (!p?.when) return null;
   const start = new Date(p.when); // "2026-09-20T14:00" from the form = her local time
   if (Number.isNaN(start.getTime())) return null;
-  const name = item.title?.trim() || 'Curbside item';
+  const name = item.title?.trim() || 'your find';
   return {
     uid: `${item.id}-${p.at || 0}@curbside`,
     title: `Pickup: ${name}${p.buyer ? ` (${p.buyer})` : ''}`,
@@ -21,7 +21,7 @@ export function pickupEvent(item, settings = {}) {
       p.buyer && `Buyer: ${p.buyer}`,
       p.price !== null && p.price !== undefined && p.price !== '' && `Agreed price: ${money(p.price)}`,
       p.note && `Note: ${p.note}`,
-      'From Curbside',
+      'From trash2treasure',
     ].filter(Boolean).join('\n'),
     location: settings.pickupArea?.trim() || '',
     start,
@@ -58,7 +58,7 @@ export function icsFile(ev, now = new Date()) {
   return `${[
     'BEGIN:VCALENDAR',
     'VERSION:2.0',
-    'PRODID:-//Curbside//Pickup//EN',
+    'PRODID:-//trash2treasure//Pickup//EN',
     'CALSCALE:GREGORIAN',
     'METHOD:PUBLISH',
     'BEGIN:VEVENT',

@@ -1,7 +1,7 @@
 {
   "id": "./",
-  "name": "Curbside",
-  "short_name": "Curbside",
+  "name": "trash2treasure",
+  "short_name": "trash2treasure",
   "description": "Keep track of your finds, from the curb to sold. Snap it, price it, post it everywhere.",
   "start_url": "./",
   "scope": "./",

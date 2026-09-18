@@ -4,10 +4,12 @@ A phone app for flipping curbside finds. Snap a photo, price it, get it ready to
 Marketplace, OfferUp, Craigslist, Nextdoor, Mercari, eBay or Poshmark, and track it all the way to
 sold and how much you made.
 
-Renamed from Curbside on 2026-09-18. The web address (mawklin.github.io/curbside), the repo and the
-internal names (IndexedDB `curbside`, the `curbside-theme` key, cache names, the backup's `curbside.json`
-and `app: 'curbside'` marker, theme id `curbside`) deliberately kept the old name: changing them would
-cut her installed app off from her saved finds and old backups.
+**Live at https://mawklin.github.io/trash2treasure/** (repo `Mawklin/trash2treasure`, GitHub Pages from
+`main` `/docs`). Renamed from Curbside on 2026-09-18; the old /curbside/ address no longer exists, and
+she reinstalled from the new one. The internal names (IndexedDB `curbside`, the `curbside-theme` key,
+cache names, the backup's `curbside.json` and `app: 'curbside'` marker, theme id `curbside`) and this
+folder deliberately keep the old name: old backups still restore, and on the same site (mawklin.github.io)
+the database name is what finds the saved data.
 
 It's a plain web app (HTML/CSS/JS in `docs/`, no build step) that installs to the Home Screen and
 works offline. **Everything is stored on the phone** (IndexedDB), so nobody else can see her

@@ -15,10 +15,20 @@ inventory and there's no server to pay for.
 - **Items**: statuses To list → Listed → Pending → Sold (or Kept/Gave away/Donated/Tossed), a
   to-do strip (pickups coming up, ready to post, needs details, listed too long, sold but still
   posted), search, and filters.
-- **Post it**: pick a site, then a four-step kit: save the photos to the camera roll (iPhone share
-  sheet → Save Images; downloads elsewhere), open the site's sell page, copy title / price /
-  description one tap each, then "I posted it". Descriptions get her pickup area and footer on local
-  sites but not on ship-only ones; Facebook's condition wording is spelled out.
+- **Post it**: tick every site she wants (last time's sites come pre-ticked), then a four-step kit
+  per site: save the photos to the camera roll (iPhone share sheet → Save Images; downloads
+  elsewhere), open the site's sell page, copy title / price / description one tap each, then "I
+  posted it", which moves straight on to the next site. Photos are saved once per run. If the phone
+  restarts the app mid-run, a "Carry on posting" card picks it back up. Descriptions get the size,
+  her pickup area and footer on local sites (not the pickup lines on ship-only ones); Facebook's
+  condition wording is spelled out.
+- **Photo checklist** per item (front, sides, label, flaws, plus extras by category) and a **Size**
+  box that's added to every description.
+- **Reply to buyers**: one-tap copies of the usual answers (still available, pickup info, size &
+  condition, lowest price, price is firm, confirm pickup, it's sold), filled in from the item.
+- **Pickup reminders**: after marking pending with a time, "Add to calendar" offers Google Calendar
+  (a link; works everywhere) or a .ics file with a 30-minute reminder. iPhone Home Screen apps can't
+  reliably hand .ics files to Apple Calendar, which is why Google is the first option.
 - **After posting**: "Mark pending" (buyer, pickup time, agreed price), "Sold it!" (price, site,
   fees), then a reminder to take it down from the other sites. Listings older than the reminder
   setting (14 days by default) get one-tap price drops or "I renewed it".
@@ -78,7 +88,9 @@ cache-first, so without the bump installed phones keep the old files.
 | `docs/app.js` | state, navigation, saving, every button's action, backup/restore |
 | `docs/views.js` | every screen as HTML |
 | `docs/model.js` | an item's life (listed, pending, sold…), money maths, to-do lists, CSV |
-| `docs/listing.js` | categories, conditions, description builder, AI prompt + answer parsing |
+| `docs/listing.js` | categories, conditions, photo checklist, description builder, AI prompt + answer parsing |
+| `docs/replies.js` | ready-made buyer replies |
+| `docs/calendar.js` | pickup reminders: Google Calendar link and .ics file |
 | `docs/platforms.js` | the selling sites, their post/search links |
 | `docs/photos.js` | shrinking photos, rotating, blob URLs, files for sharing |
 | `docs/ai.js` | Gemini free-tier call with model fallback |

@@ -2,7 +2,9 @@
 // attributes anywhere: the page's security policy blocks them, so sizes are set in app.js.
 import { esc, money, moneyInput, ago, shortDate, longDate, isoDay, plural, pickupLabel, daysSince } from './util.js';
 import { PLATFORMS, PRICE_CHECKS, IN_PERSON, platform, platformName } from './platforms.js';
-import { CATEGORIES, CONDITIONS, conditionLabel, conditionFor, titleWarning } from './listing.js';
+import { CATEGORIES, CONDITIONS, conditionLabel, conditionFor, titleWarning, photoChecklist } from './listing.js';
+import { quickReplies } from './replies.js';
+import { pickupEvent } from './calendar.js';
 import {
   STATUSES, DONE_REASONS, doneLabel, activeListings, isListedOn, needsDetails, readyToPost, isStale,
   todo, summarize, monthly, inventory, profit, daysToSell, priceDrops, freshAt,
@@ -31,6 +33,8 @@ export const ICON = {
   right: svg('<path d="M10 7l5 5-5 5"/>'),
   star: svg('<path d="M12 4l2.4 5 5.4.7-4 3.7 1 5.4L12 16.2 7.2 18.8l1-5.4-4-3.7 5.4-.7Z"/>'),
   close: svg('<path d="M6 6l12 12M18 6L6 18"/>'),
+  calendar: svg('<rect x="4" y="5.5" width="16" height="14.5" rx="2"/><path d="M4 10h16M8.5 3.5v4M15.5 3.5v4"/>'),
+  chat: svg('<path d="M5 18.5l-1 3 3.6-1.6A8.5 8.5 0 1 0 5 18.5Z"/>'),
 };
 
 const pdot = (id, big = false) => {
@@ -214,12 +218,26 @@ export function chipsHtml(s) {
   </div>`;
 }
 
+// Phones sometimes restart the app while she's over in Facebook. This picks the run back up.
+function resumeCard(s) {
+  const run = s.run;
+  const item = run && s.items.find((i) => i.id === run.itemId);
+  const pid = run?.queue[run.at];
+  if (!item || !pid || run.queue.length < 2 || Date.now() - (run.updatedAt || 0) > 12 * 3600000) return '';
+  return `<section class="notice notice-run"><div>
+    <strong>Carry on posting</strong>
+    <p>${esc(item.title?.trim() || 'Untitled find')}: next is ${esc(platformName(pid))} (site ${run.at + 1} of ${run.queue.length}).</p>
+    <div class="notice-actions"><button class="btn btn-small btn-primary" data-action="resume-run">Carry on</button><button class="btn btn-small btn-ghost" data-action="stop-run">I'm done</button></div>
+  </div></section>`;
+}
+
 export function itemsView(s) {
   return `<header class="topbar">
     <div class="brand"><span class="brand-mark">${ICON.tag}</span><h1>Curbside</h1></div>
     <a class="icon-btn" href="#/settings" aria-label="Settings">${ICON.gear}</a>
   </header>
   <main class="page page-items">
+    ${resumeCard(s)}
     ${installCard(s)}
     ${backupNudge(s)}
     ${s.items.length ? todoStrip(s) : ''}
@@ -232,10 +250,30 @@ export function itemsView(s) {
 
 // ---------- One item ----------
 
+export function shotCount(item) {
+  const list = photoChecklist(item.category);
+  return { done: list.filter((s) => item.shots?.includes(s.id)).length, total: list.length };
+}
+
+// Which photos buyers want to see, ticked off as she takes them. Open while she's still
+// getting the item ready; folded away after that.
+export function shotList(item) {
+  if (!['tolist', 'listed'].includes(item.status)) return '';
+  const list = photoChecklist(item.category);
+  const { done, total } = shotCount(item);
+  const open = item.status === 'tolist' && done < total && item.photos.length < 3;
+  return `<details class="shot-list"${open ? ' open' : ''}>
+    <summary><span>${ICON.camera} Photo checklist</span><span class="shot-count" id="shot-count">${done} of ${total}</span></summary>
+    <p class="hint">Listings with these get more messages. Tick them off as you go.</p>
+    ${list.map((sh) => `<label class="check shot"><input type="checkbox" data-shot="${sh.id}" ${item.shots?.includes(sh.id) ? 'checked' : ''}> ${esc(sh.label)}</label>`).join('')}
+  </details>`;
+}
+
 function gallery(item) {
   if (!item.photos.length) {
     return `<section class="gallery gallery-empty">
       ${photoPicker('item', `${ICON.camera}<span>Add photos</span>`, 'add-first')}
+      ${shotList(item)}
     </section>`;
   }
   const many = item.photos.length > 1;
@@ -246,6 +284,7 @@ function gallery(item) {
       ${item.photos.map((id, n) => `<button class="thumb${n === 0 ? ' cover' : ''}" data-action="photo" data-n="${n}" aria-label="Photo ${n + 1} options"><img src="${thumbUrl(id)}" alt="">${n === 0 && many ? '<span class="cover-tag">Cover</span>' : ''}</button>`).join('')}
       ${photoPicker('item', `${ICON.plus}<span>Add</span>`, 'thumb thumb-add')}
     </div>
+    <div class="gallery-extras">${shotList(item)}</div>
   </section>`;
 }
 
@@ -297,6 +336,7 @@ export function statusPanel(s, item) {
         <span>${esc(bits.join(' · ') || 'No pickup time yet')}</span>
         ${p.note ? `<span class="panel-note">${esc(p.note)}</span>` : ''}</div>
         <div class="panel-actions"><button class="btn btn-primary" data-action="sheet" data-sheet="sold">Sold it!</button><button class="btn" data-action="fell-through">Fell through</button></div>
+        ${p.when ? `<button class="btn btn-small btn-cal" data-action="sheet" data-sheet="calendar">${ICON.calendar} Add pickup to calendar</button>` : ''}
         <div class="panel-links"><button class="link" data-action="sheet" data-sheet="pending">Change details</button></div>
       </section>`;
     }
@@ -340,8 +380,10 @@ function detailsCard(item) {
       <label class="field"><span class="field-label">Condition</span>
         <select data-field="condition">${options(CONDITIONS.map((c) => [c.id, c.label]), item.condition, 'Pick one')}</select></label>
     </div>
+    <label class="field"><span class="field-label">Size <span class="muted">(measure it: buyers always ask)</span></span>
+      <input data-field="size" value="${esc(item.size)}" placeholder='e.g. 30" wide, 18" deep, 32" tall' autocomplete="off" enterkeyhint="next"></label>
     <label class="field"><span class="field-label">Description</span>
-      <textarea data-field="description" rows="5" placeholder="What it is, size, brand, any wear. Your pickup line gets added when you post.">${esc(item.description)}</textarea></label>
+      <textarea data-field="description" rows="5" placeholder="What it is, brand, any wear. Size and your pickup line get added when you post.">${esc(item.description)}</textarea></label>
   </section>`;
 }
 
@@ -365,6 +407,18 @@ function postedCard(item) {
       </div>`).join('') : '<p class="muted">Not posted anywhere yet.</p>'}
     ${canPost ? `<a class="btn btn-block" href="#/item/${esc(item.id)}/post">${ICON.share} Post it ${active ? 'somewhere else' : 'somewhere'}</a>` : ''}
   </section>`;
+}
+
+function repliesCard(s, item) {
+  const replies = quickReplies(item, s.settings);
+  const open = ['listed', 'pending'].includes(item.status);
+  return `<details class="card replies"${open ? ' open' : ''}>
+    <summary><h2>${ICON.chat} Reply to buyers</h2></summary>
+    <p class="hint">Tap one to copy it, then paste it in the chat.</p>
+    <div class="reply-list">${replies.map((r) => `<button class="reply" data-action="copy-reply" data-reply="${r.id}">
+      <span class="reply-label">${esc(r.label)}</span><span class="reply-text">${esc(r.text)}</span>
+      <span class="reply-copy">${ICON.copy}<span>Copy</span></span></button>`).join('')}</div>
+  </details>`;
 }
 
 const privateCard = (item) => `<section class="card">
@@ -394,6 +448,7 @@ export function itemView(s, item) {
     ${detailsCard(item)}
     ${priceCheckCard()}
     ${postedCard(item)}
+    ${repliesCard(s, item)}
     ${privateCard(item)}
     ${historyCard(item)}
     <div class="danger-row"><button class="btn btn-ghost btn-danger" data-action="delete-item">${ICON.trash} Delete this item</button></div>
@@ -413,6 +468,8 @@ const enabledPlatforms = (s) => PLATFORMS.filter((p) => s.settings.platforms.inc
 
 export function postPickView(s, item) {
   const cover = item.photos[0] ? thumbUrl(item.photos[0]) : '';
+  const picked = s.pick || new Set();
+  const count = picked.size;
   return `${subbar('Post it')}
   <main class="page page-post">
     <div class="post-preview">
@@ -422,10 +479,20 @@ export function postPickView(s, item) {
     </div>
     ${readiness(item)}
     <h2 class="section-title">Where to?</h2>
+    <p class="hint">Pick every site you want. You'll save the photos once, then the app walks you through each site in turn.</p>
     <div class="platform-grid">
-      ${enabledPlatforms(s).map((p) => `<a class="platform-tile${isListedOn(item, p.id) ? ' posted' : ''}" href="#/item/${esc(item.id)}/post/${p.id}">
-        ${pdot(p.id, true)}<span class="pt-name">${esc(p.short)}</span>
-        <span class="pt-sub">${isListedOn(item, p.id) ? `${ICON.check} Posted` : p.local ? 'Local pickup' : 'Ships'}</span></a>`).join('')}
+      ${enabledPlatforms(s).map((p) => {
+        const on = picked.has(p.id);
+        const posted = isListedOn(item, p.id);
+        return `<button class="platform-tile${on ? ' picked' : ''}${posted ? ' posted' : ''}" data-action="pick-site" data-platform="${p.id}" aria-pressed="${on}">
+          <span class="pick-box" aria-hidden="true">${ICON.check}</span>
+          ${pdot(p.id, true)}<span class="pt-name">${esc(p.short)}</span>
+          <span class="pt-sub">${posted ? 'Already posted' : p.local ? 'Local pickup' : 'Ships'}</span></button>`;
+      }).join('')}
+    </div>
+    <div class="start-bar">
+      <button class="btn btn-primary btn-big btn-block" data-action="start-run" ${count ? '' : 'disabled'}>${ICON.share} ${
+        count === 0 ? 'Pick a site' : count === 1 ? `Post on ${esc(platformName([...picked][0]))}` : `Post on ${count} sites`}</button>
     </div>
     <section class="card">
       <h2>Anywhere else</h2>
@@ -444,23 +511,46 @@ function copyRow(key, label, text, note = '') {
   </div>`;
 }
 
+// The multi-site run this page belongs to, if any (a run of one site is just a normal post).
+export function runFor(s, item, pid) {
+  const run = s.run;
+  return run && run.itemId === item.id && run.queue.length > 1 && run.queue.includes(pid) ? run : null;
+}
+
+function runBar(run, pid) {
+  const pos = run.queue.indexOf(pid);
+  return `<div class="run-bar" aria-label="Site ${pos + 1} of ${run.queue.length}">
+    <div class="run-steps">${run.queue.map((id, i) => `<span class="run-step${i < pos ? ' done' : i === pos ? ' now' : ''}">${i < pos ? `<span class="run-done">${ICON.check}</span>` : pdot(id)}<span>${esc(platformName(id))}</span></span>`).join('')}</div>
+    <div class="run-count">Site ${pos + 1} of ${run.queue.length}</div>
+  </div>`;
+}
+
 export function kitView(s, item, p) {
   const n = item.photos.length;
   const texts = s.kit?.texts || {};
   const listed = isListedOn(item, p.id);
   const l = item.listings?.[p.id];
+  const run = runFor(s, item, p.id);
+  const pos = run ? run.queue.indexOf(p.id) : 0;
+  const next = run && pos < run.queue.length - 1 ? platform(run.queue[pos + 1]) : null;
   const savePhotosHint = s.isIOS
     ? `Tap below, then <b>Save ${n === 1 ? 'Image' : `${n} Images`}</b>. They'll be the newest in your Photos.`
     : 'They go to your Downloads, ready to pick when you add photos.';
   const condition = item.condition ? conditionFor(p.id, item.condition) : '';
+  const photosDone = run?.photosSaved && n;
   return `${subbar(esc(p.name))}
   <main class="page page-kit">
+    ${run ? runBar(run, p.id) : ''}
     ${readiness(item)}
     <ol class="steps">
-      <li class="step"><div class="step-n">1</div><div class="step-body">
-        <h3>Save the photos</h3>
-        <p class="hint">${savePhotosHint}</p>
-        <button class="btn btn-block" data-action="save-photos" id="save-photos" ${n && s.kit?.files ? '' : 'disabled'}>${ICON.image} ${n ? `Save ${plural(n, 'photo')}` : 'No photos yet'}</button>
+      <li class="step${photosDone ? ' step-done' : ''}"><div class="step-n">${photosDone ? ICON.check : '1'}</div><div class="step-body">
+        ${photosDone
+    ? `<h3>Photos already saved</h3>
+           <p class="hint">They're in your ${s.isIOS ? 'Photos' : 'Downloads'} from the first site. Pick the same ones here.</p>
+           <button class="link" data-action="save-photos" id="save-photos">Save them again</button>`
+    : `<h3>Save the photos</h3>
+           <p class="hint">${savePhotosHint}${run ? ' You only need to do this once for all the sites.' : ''}</p>
+           <button class="btn btn-block" data-action="save-photos" id="save-photos" ${n && s.kit?.files ? '' : 'disabled'}>${ICON.image} ${n ? `Save ${plural(n, 'photo')}` : 'No photos yet'}</button>`}
       </div></li>
       <li class="step"><div class="step-n">2</div><div class="step-body">
         <h3>Open ${esc(p.short)}</h3>
@@ -482,11 +572,14 @@ export function kitView(s, item, p) {
       <li class="step"><div class="step-n">4</div><div class="step-body">
         ${listed
     ? `<h3>${ICON.check} Posted ${esc(ago(l.listedAt))}</h3><p class="hint">It's on your list as posted on ${esc(p.short)}.</p>
-           <button class="btn btn-block" data-action="go-item">Back to the item</button>`
+           ${next ? `<button class="btn btn-primary btn-block" data-action="run-skip">Next: ${esc(next.short)}</button>`
+    : run ? '<button class="btn btn-primary btn-block" data-action="run-skip">Finish</button>'
+      : '<button class="btn btn-block" data-action="go-item">Back to the item</button>'}`
     : `<h3>Posted it?</h3>
            <label class="field"><span class="field-label">Link to your listing (optional)</span>
              <input data-kit="url" type="url" inputmode="url" placeholder="Paste the link" autocomplete="off"></label>
-           <button class="btn btn-primary btn-block btn-big" data-action="mark-listed">${ICON.check} I posted it</button>`}
+           <button class="btn btn-primary btn-block btn-big" data-action="mark-listed">${ICON.check} ${next ? `Posted it, next: ${esc(next.short)}` : 'I posted it'}</button>
+           ${run ? `<button class="link run-skip" data-action="run-skip">${next ? `Skip ${esc(p.short)}, go to ${esc(next.short)}` : `Skip ${esc(p.short)} and finish`}</button>` : ''}`}
       </div></li>
     </ol>
   </main>`;
@@ -790,6 +883,20 @@ function aiSheet(s, item) {
     </div>`;
 }
 
+function calendarSheet(s, item) {
+  const ev = pickupEvent(item, s.settings);
+  if (!ev) return `<h2>No pickup time yet</h2><p class="hint">Add one with "Change details" first.</p>
+    <div class="sheet-actions"><button class="btn" data-action="close-sheet">Close</button></div>`;
+  return `<h2>${ICON.calendar} Add the pickup to your calendar</h2>
+    <div class="cal-preview"><b>${esc(ev.title)}</b><span class="muted">${esc(pickupLabel(item.pending.when))} · reminder 30 minutes before</span></div>
+    <button class="btn btn-primary btn-block" data-action="cal-google">Google Calendar ${ICON.external}</button>
+    <button class="btn btn-block" data-action="cal-ics">${s.isIOS ? 'Apple Calendar' : 'Other calendar app'} (calendar file)</button>
+    <p class="hint">Google Calendar opens with everything filled in, so just tap Save.${s.isIOS
+    ? ' Apple Calendar can be fussy with files from Home Screen apps: if nothing happens, use Google Calendar, or pick Mail, send it to yourself and tap the invite.'
+    : ''}</p>
+    <div class="sheet-actions"><button class="btn btn-ghost" data-action="close-sheet">Close</button></div>`;
+}
+
 export function sheetView(s, item) {
   const sh = s.sheet;
   if (!sh || !item) return '';
@@ -802,6 +909,7 @@ export function sheetView(s, item) {
     case 'photo': body = photoSheet(item, sh.n); label = 'Photo'; break;
     case 'listing': body = listingSheet(item, sh.platform); label = 'Listing'; break;
     case 'ai': body = aiSheet(s, item); label = 'AI listing writer'; break;
+    case 'calendar': body = calendarSheet(s, item); label = 'Add to calendar'; break;
     default: return '';
   }
   return `<div class="sheet-backdrop" data-action="close-sheet"></div>

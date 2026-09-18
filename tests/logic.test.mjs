@@ -223,3 +223,60 @@ test('backup zip round-trips, including photos', async () => {
   assert.equal(crc32(new TextEncoder().encode('The quick brown fox jumps over the lazy dog')), 0x414fa339);
   await assert.rejects(readZip(new Blob(['not a zip at all'])), /isn't a Curbside backup/);
 });
+
+// ---------- v1.2: size, photo checklist, buyer replies, pickup calendar ----------
+import { photoChecklist } from '../docs/listing.js';
+import { quickReplies } from '../docs/replies.js';
+import { pickupEvent, googleCalendarUrl, icsFile, utcStamp } from '../docs/calendar.js';
+
+test('size goes into every description, before condition', () => {
+  const item = { ...newItem(T0), description: 'Oak dresser.', size: '30" W x 18" D', condition: 'good' };
+  assert.equal(buildDescription(item, 'ebay', {}), 'Oak dresser.\n\nSize: 30" W x 18" D\nCondition: Good');
+  assert.ok(toCsv([item]).includes(',"30"" W x 18"" D",'), 'size column, quotes escaped');
+});
+
+test('photo checklist adds extras by category', () => {
+  assert.deepEqual(photoChecklist('').map((s) => s.id), ['front', 'sides', 'label', 'flaws']);
+  assert.deepEqual(photoChecklist('Furniture').map((s) => s.id), ['front', 'sides', 'label', 'flaws', 'open', 'scale']);
+  assert.ok(photoChecklist('Clothing & Shoes').some((s) => s.id === 'tag'));
+});
+
+test('buyer replies fit the item and its status', () => {
+  const settings = { pickupArea: 'Main & 5th' };
+  const item = { ...newItem(T0), title: 'Dresser', price: 120, floor: 90, size: '30" wide', condition: 'likenew' };
+  const ids = (i) => quickReplies(i, settings, T0).map((r) => r.id);
+  assert.deepEqual(ids(item), ['available', 'pickup', 'details', 'lowest', 'firm', 'first']);
+  const byId = Object.fromEntries(quickReplies(item, settings, T0).map((r) => [r.id, r.text]));
+  assert.equal(byId.pickup, "Pickup is near Main & 5th. I'll send the exact address once we pick a time.");
+  assert.equal(byId.details, "It measures 30\" wide, and it's in like-new condition.");
+  assert.equal(byId.lowest, 'The lowest I can do is $90.');
+  assert.equal(quickReplies({ ...item, condition: 'parts', size: '' }, settings, T0).find((r) => r.id === 'details').text, 'It needs some work.');
+
+  const pending = setPending({ ...item }, { buyer: 'Sam', when: '2026-09-01T15:00' }, T0);
+  assert.equal(ids(pending)[0], 'confirm');
+  assert.match(quickReplies(pending, settings, T0)[0].text, /^See you today 3 PM!/);
+  assert.ok(!ids(pending).includes('available'));
+  assert.deepEqual(ids(markSold({ ...item }, { price: 100 }, T0)), ['sold']);
+  assert.ok(!ids({ ...item, floor: null }).includes('lowest'));
+});
+
+test('pickup calendar event: Google link and .ics file', () => {
+  const item = setPending({ ...newItem(T0), title: 'Oak desk, solid; heavy' },
+    { buyer: 'Jordan', when: '2026-09-20T14:00', price: 30, note: 'Bringing a truck' }, T0);
+  const ev = pickupEvent(item, { pickupArea: 'Main & 5th' });
+  assert.equal(ev.title, 'Pickup: Oak desk, solid; heavy (Jordan)');
+  assert.equal(ev.end - ev.start, 30 * 60000);
+  assert.equal(utcStamp(ev.start), utcStamp(new Date(2026, 8, 20, 14, 0)));
+  const url = new URL(googleCalendarUrl(ev));
+  assert.equal(url.hostname, 'calendar.google.com');
+  assert.equal(url.searchParams.get('dates'), `${utcStamp(ev.start)}/${utcStamp(ev.end)}`);
+  assert.match(url.searchParams.get('details'), /Agreed price: \$30/);
+  const ics = icsFile(ev, new Date(T0));
+  assert.ok(ics.startsWith('BEGIN:VCALENDAR\r\n'));
+  const unfolded = ics.replace(/\r\n /g, '');
+  assert.ok(unfolded.includes('SUMMARY:Pickup: Oak desk\\, solid\\; heavy (Jordan)'), 'commas and semicolons escaped');
+  assert.ok(unfolded.includes('DESCRIPTION:Buyer: Jordan\\nAgreed price: $30\\nNote: Bringing a truck\\nFrom Curbside'));
+  assert.ok(ics.includes('TRIGGER:-PT30M'));
+  assert.ok(ics.split('\r\n').every((line) => line.length <= 75), 'long lines folded');
+  assert.equal(pickupEvent({ ...item, pending: { buyer: 'x' } }), null, 'no time, no event');
+});

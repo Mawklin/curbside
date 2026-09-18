@@ -85,40 +85,81 @@ await page.evaluate(() => window.scrollTo(0, 0));
 await shot('02-item-filled');
 await shot('02b-item-full', true);
 
-// 4. Post to Facebook with the kit
+// 3b. Photo checklist and size
+assert.equal(await text('#shot-count'), '0 of 6', 'Furniture adds two extra shots to the basic four');
+await page.check('[data-shot="front"]');
+await page.check('[data-shot="sides"]');
+assert.equal(await text('#shot-count'), '2 of 6');
+await page.fill('[data-field="size"]', '24" wide, 32" tall');
+await page.waitForTimeout(700);
+await page.reload();
+await page.waitForSelector('[data-field="size"]');
+assert.equal(await page.inputValue('[data-field="size"]'), '24" wide, 32" tall');
+assert.equal(await page.isChecked('[data-shot="front"]'), true);
+await page.selectOption('[data-field="category"]', 'Clothing & Shoes');
+assert.ok(await page.locator('[data-shot="tag"]').count(), 'checklist follows the category');
+await page.selectOption('[data-field="category"]', 'Furniture');
+step('photo checklist ticks and size survive a reload; list follows the category');
+
+// 4. Post to two sites in one go
 await page.click('#status-panel a:has-text("Post it")');
 await page.waitForURL(/\/post$/);
 await page.waitForSelector('.platform-grid');
-await shot('04-post-pick');
+assert.equal(await page.locator('.platform-tile.picked').count(), 0, 'nothing ticked the first time');
 await page.click('.platform-tile:has-text("Facebook")');
+await page.click('.platform-tile:has-text("OfferUp")');
+assert.match(await text('[data-action="start-run"]'), /Post on 2 sites/);
+await shot('04-post-pick');
+await page.click('[data-action="start-run"]');
 await page.waitForURL(/\/post\/facebook$/);
 await page.waitForFunction(() => !document.querySelector('#save-photos')?.disabled);
+assert.match(await text('.run-bar'), /Site 1 of 2/i);
 await shot('05-kit-facebook', true);
 await page.click('[data-copy="title"]');
 assert.equal(await page.evaluate(() => navigator.clipboard.readText()), 'Teal accent chair');
 await page.click('[data-copy="description"]');
 const desc = await page.evaluate(() => navigator.clipboard.readText());
-assert.match(desc, /no rips or stains\.\r?\n\r?\nCondition: Good/);
+assert.match(desc, /no rips or stains\.\r?\n\r?\nSize: 24" wide, 32" tall\r?\nCondition: Good/);
 await page.click('[data-copy="price"]');
 assert.equal(await page.evaluate(() => navigator.clipboard.readText()), '60');
 const [download] = await Promise.all([page.waitForEvent('download'), page.click('#save-photos')]);
 assert.equal(download.suggestedFilename(), 'teal-accent-chair-1.jpg');
-step('kit copies title/price/description and saves photos');
+await page.waitForTimeout(500);
+step('site 1 of 2: copies title/price/description (with size), saves photos');
 await page.fill('[data-kit="url"]', 'https://www.facebook.com/marketplace/item/123');
+assert.match(await text('[data-action="mark-listed"]'), /next: OfferUp/);
+await page.click('[data-action="mark-listed"]');
+await page.waitForURL(/\/post\/offerup$/);
+await page.waitForSelector('.run-bar');
+assert.match(await text('.run-bar'), /Site 2 of 2/i);
+assert.match(await text('.step-done'), /Photos already saved/);
+assert.match(await toastText(), /Posted on Facebook\. Next: OfferUp/);
+await page.waitForTimeout(300);
+await shot('05b-kit-offerup');
+step('moved straight on to OfferUp; photos step already done');
 await page.click('[data-action="mark-listed"]');
 await page.waitForURL(itemUrl);
 await page.waitForSelector('.panel-listed');
-assert.match(await text('.topbar-title'), /Listed/);
-step('marked as posted on Facebook, back on the item');
-
-// Also OfferUp, via "Post it somewhere else"
-await page.click('#status-panel a:has-text("Post it somewhere else")');
-await page.click('.platform-tile:has-text("OfferUp")');
-await page.waitForURL(/\/post\/offerup$/);
-await page.click('[data-action="mark-listed"]');
-await page.waitForURL(itemUrl);
+assert.match(await toastText(), /Posted on 2 sites/);
 assert.match(await text('#status-panel'), /Facebook and OfferUp/);
-step('also posted on OfferUp');
+step('finished the run: listed on Facebook and OfferUp');
+
+// Next time, the same two sites are ticked, minus the ones it's already on.
+await page.click('#status-panel a:has-text("Post it somewhere else")');
+await page.waitForSelector('.platform-grid');
+assert.equal(await page.locator('.platform-tile.picked').count(), 0, 'both already posted, so none pre-ticked');
+await page.click('[data-action="back"]');
+await page.waitForSelector('#status-panel');
+
+// Buyer replies
+await page.waitForSelector('.replies[open]');
+await page.click('.reply[data-reply="available"]');
+assert.match(await page.evaluate(() => navigator.clipboard.readText()), /still available/);
+await page.click('.reply[data-reply="details"]');
+assert.equal(await page.evaluate(() => navigator.clipboard.readText()), 'It measures 24" wide, 32" tall, and it\'s in good condition.');
+await page.locator('.replies').scrollIntoViewIfNeeded();
+await shot('05c-replies');
+step('buyer replies copy with the item filled in');
 
 // Back button history: back from the item goes to the list, not the kit
 await page.click('[data-action="back"]');
@@ -142,6 +183,25 @@ await page.waitForSelector('.panel-pending');
 assert.match(await text('#status-panel'), /Pending with Alex/);
 assert.match(await text('#status-panel'), /\$55 agreed/);
 step('pending sale saved');
+
+// Pickup reminder: the "Marked as pending" message offers the calendar.
+await page.click('#toast [data-action="toast-action"]');
+await page.waitForSelector('.cal-preview');
+await page.waitForTimeout(400);
+await shot('06b-calendar-sheet');
+const [popup] = await Promise.all([page.waitForEvent('popup'), page.click('[data-action="cal-google"]')]);
+const firstUrl = popup.url();
+await popup.close();
+step(`Google Calendar link opened: ${firstUrl.slice(0, 110)}`);
+const [icsDl] = await Promise.all([page.waitForEvent('download'), page.click('[data-action="cal-ics"]')]);
+const icsPath = `${SCRATCH}/pickup.ics`;
+await icsDl.saveAs(icsPath);
+const icsText = readFileSync(icsPath, 'utf8');
+assert.match(icsText, /SUMMARY:Pickup: Teal accent chair \(Alex\)/);
+assert.match(icsText, /TRIGGER:-PT30M/);
+await page.click('.sheet [data-action="close-sheet"]');
+step('pickup: "Add to calendar" offered, Google link opens, .ics downloads with a reminder');
+
 
 await page.click('#status-panel [data-sheet="sold"]');
 assert.equal(await page.inputValue('[data-sf="price"]'), '55');

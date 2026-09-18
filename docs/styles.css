@@ -884,3 +884,97 @@ body:not([data-page="items"]):not([data-page="money"]) #toast { bottom: calc(16p
   font: 700 15px var(--font);
   cursor: pointer;
 }
+
+/* ---------- posting to several sites ---------- */
+
+button.platform-tile { width: 100%; font: inherit; text-align: left; cursor: pointer; position: relative; }
+.platform-tile.posted { border-color: transparent; }
+.platform-tile.picked { border-color: var(--accent); background: var(--accent-soft); }
+.pick-box {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border: 2px solid var(--line-strong);
+  border-radius: 8px;
+  background: var(--surface);
+  color: transparent;
+}
+.pick-box svg { width: 16px; height: 16px; stroke-width: 3; }
+.platform-tile.picked .pick-box { border-color: var(--accent); background: var(--accent); color: var(--accent-ink); }
+.platform-tile.posted .pt-sub { color: var(--muted); font-weight: 500; }
+
+.start-bar {
+  position: sticky;
+  bottom: 0;
+  z-index: 5;
+  margin: 0 -16px;
+  padding: 4px 16px calc(12px + env(safe-area-inset-bottom));
+  background: linear-gradient(to top, var(--bg) 70%, transparent);
+}
+
+.run-bar { margin: 4px 0 12px; padding: 12px 14px; border-radius: var(--radius); background: var(--accent-soft); }
+.run-steps { display: flex; flex-wrap: wrap; gap: 6px 14px; }
+.run-step { display: inline-flex; align-items: center; gap: 6px; color: var(--ink-2); font-size: 14px; font-weight: 600; }
+.run-step.now { color: var(--ink); }
+.run-step.now .pdot { box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--accent); }
+.run-step.done { color: var(--muted); text-decoration: line-through; }
+.run-done { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 6px; background: var(--accent); color: var(--accent-ink); }
+.run-done svg { width: 14px; height: 14px; stroke-width: 3; }
+.run-count { margin-top: 8px; color: var(--accent-strong); font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; }
+.step-done .step-n svg { width: 16px; height: 16px; stroke-width: 3; }
+.run-skip { display: block; margin: 10px auto 0; }
+.notice-run { background: var(--accent-soft); }
+
+/* ---------- photo checklist ---------- */
+
+.gallery-extras { padding: 6px 16px 0; }
+@media (min-width: 680px) { .gallery-extras { padding: 6px 0 0; } }
+.gallery-empty .shot-list { margin-top: 10px; }
+.shot-list { padding: 12px 14px; border-radius: 14px; background: var(--surface); box-shadow: var(--shadow); }
+.shot-list summary { display: flex; justify-content: space-between; align-items: center; list-style: none; cursor: pointer; font-weight: 650; }
+.shot-list summary::-webkit-details-marker { display: none; }
+.shot-list summary > span:first-child { display: flex; align-items: center; gap: 8px; }
+.shot-list summary svg { color: var(--accent); }
+.shot-count { padding: 2px 10px; border-radius: 99px; background: var(--accent-soft); color: var(--accent-strong); font-size: 13px; }
+.shot-list .hint { margin: 8px 0 2px; }
+.shot { min-height: 40px; font-size: 15px; }
+
+/* ---------- buyer replies ---------- */
+
+.replies summary { list-style: none; cursor: pointer; display: flex; align-items: center; justify-content: space-between; }
+.replies summary::-webkit-details-marker { display: none; }
+.replies summary h2 { display: flex; align-items: center; gap: 8px; }
+.replies summary h2 svg { color: var(--accent); }
+.replies summary::after { content: "Show"; color: var(--accent); font-weight: 600; font-size: 14px; }
+.replies[open] summary::after { content: "Hide"; }
+.replies > .hint { margin: 8px 0 4px; }
+.reply-list { display: flex; flex-direction: column; gap: 8px; }
+.reply {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 2px 12px;
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--field);
+  color: var(--ink);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.reply:active { background: var(--sunk); }
+.reply-label { grid-column: 1; color: var(--accent-strong); font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; }
+.reply-text { grid-column: 1; font-size: 15px; }
+.reply-copy { grid-column: 2; grid-row: 1 / span 2; align-self: center; display: inline-flex; align-items: center; gap: 4px; color: var(--accent); font-size: 14px; font-weight: 600; }
+.reply-copy svg { width: 16px; height: 16px; }
+.reply.copied { border-color: var(--accent); background: var(--accent-soft); }
+
+/* ---------- calendar ---------- */
+
+.btn-cal { margin-top: 10px; background: var(--accent-soft); border-color: transparent; color: var(--accent-strong); }
+.cal-preview { display: flex; flex-direction: column; gap: 2px; margin-bottom: 8px; padding: 12px 14px; border-radius: 14px; background: var(--accent-soft); }

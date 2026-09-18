@@ -32,6 +32,7 @@ export function newItem(now = Date.now()) {
     floor: null,
     category: '',
     condition: '',
+    size: '',
     description: '',
     foundOn: now,
     foundWhere: '',
@@ -39,6 +40,7 @@ export function newItem(now = Date.now()) {
     cost: null,
     notes: '',
     photos: [],
+    shots: [],
     listings: {},
     pending: null,
     sale: null,
@@ -226,7 +228,7 @@ export function inventory(items) {
 // Nothing typed, no photo, never posted: safe to clear away when she leaves it.
 export const isBlank = (i) => i.status === 'tolist' && !i.photos?.length && !i.title?.trim()
   && (i.price === null || i.price === '') && (i.cost === null || i.cost === '') && !i.floor
-  && !i.description?.trim() && !i.notes?.trim() && !i.foundWhere?.trim() && !i.storedAt?.trim()
+  && !i.description?.trim() && !i.size?.trim() && !i.notes?.trim() && !i.foundWhere?.trim() && !i.storedAt?.trim()
   && !i.category && !i.condition && !Object.keys(i.listings || {}).length;
 
 export const needsDetails =(i) => i.status === 'tolist' && (!i.title?.trim() || i.price === null || i.price === '' || !i.photos?.length);
@@ -274,7 +276,7 @@ export function listedSummary(item, now = Date.now()) {
 // ---------- spreadsheet ----------
 
 export function toCsv(items) {
-  const head = ['Title', 'Status', 'Category', 'Condition', 'Asking price', "Lowest I'd take", 'Spent on it',
+  const head = ['Title', 'Status', 'Category', 'Condition', 'Size', 'Asking price', "Lowest I'd take", 'Spent on it',
     'Sold for', 'Fees', 'Profit', 'Sold on', 'Sale date', 'Days to sell', 'Buyer', 'Posted on',
     'Found on', 'Found where', 'Stored at', 'Notes', 'Description'];
   const rows = [...items].sort((a, b) => a.createdAt - b.createdAt).map((i) => [
@@ -282,6 +284,7 @@ export function toCsv(items) {
     i.status === 'done' ? doneLabel(i.done?.reason) : STATUSES[i.status]?.label,
     i.category,
     conditionLabel(i.condition),
+    i.size || '',
     i.price ?? '',
     i.floor ?? '',
     i.cost ?? '',

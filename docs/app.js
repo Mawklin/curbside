@@ -2,9 +2,11 @@ import * as db from './db.js';
 import { esc, money, parseMoney, fromIsoDay, isoDay, plural } from './util.js';
 import { PLATFORMS, DEFAULT_PLATFORMS, PRICE_CHECKS, platform, platformName } from './platforms.js';
 import { buildDescription, copyAllText, shareText, aiSharePrompt, parseAiReply } from './listing.js';
+import { quickReplies } from './replies.js';
+import { pickupEvent, googleCalendarUrl, icsFile } from './calendar.js';
 import {
   newItem, markListed, renewListing, takeDown, setPrice, setPending, fellThrough, markSold, undoSale,
-  markDone, bringBack, activeListings, profit, monthly, toCsv, isBlank,
+  markDone, bringBack, activeListings, profit, monthly, toCsv, isBlank, isListedOn,
 } from './model.js';
 import {
   makePhoto, rotated, smallJpeg, base64, loadUrls, rememberUrls, forgetUrls, photoFiles,
@@ -13,11 +15,11 @@ import { suggestListing, findKey, CANCELLED, GEMINI_MODELS } from './ai.js';
 import { makeZip, readZip } from './zip.js';
 import {
   itemsView, gridHtml, chipsHtml, itemView, statusPanel, postPickView, kitView, moneyView, settingsView,
-  sheetView, monthChart, monthCaption, ICON,
+  sheetView, monthChart, monthCaption, ICON, runFor, shotList, shotCount,
 } from './views.js';
 
 // Bump together with CACHE in sw.js on every release, or installed phones keep old files.
-const VERSION = '1.1.0';
+const VERSION = '1.2.0';
 
 const DEFAULT_SETTINGS = {
   pickupArea: '',
@@ -54,6 +56,9 @@ const state = {
   sheet: null,
   ai: null,
   kit: null,
+  pick: null, // sites ticked on the "Post it" page
+  pickFor: null,
+  run: null, // { itemId, queue: [site ids], at, photosSaved, updatedAt } while posting to several sites
   backupFile: null,
   installEvent: null,
   standalone: matchMedia('(display-mode: standalone)').matches || navigator.standalone === true,
@@ -231,6 +236,18 @@ async function route() {
       }
       await Promise.all([loadUrls(item.photos, 'thumb'), loadUrls(item.photos, 'full')]);
       if (r.name === 'kit' || r.name === 'post') prepareKit(item, r.platform || null);
+      // Start with the sites she used last time, minus any it's already on. Stepping back from a
+      // site mid-run keeps whatever she had ticked.
+      if (r.name === 'post' && !(prev.name === 'kit' && prev.id === item.id && state.pickFor === item.id)) {
+        state.pick = new Set((state.settings.usualSites || [])
+          .filter((id) => state.settings.platforms.includes(id) && !isListedOn(item, id)));
+        state.pickFor = item.id;
+      }
+      const run = r.name === 'kit' && runFor(state, item, r.platform);
+      if (run) {
+        run.at = run.queue.indexOf(r.platform);
+        saveRun();
+      }
       else state.kit = null;
     } else {
       state.kit = null;
@@ -334,6 +351,45 @@ function prepareKit(item, platformId) {
       if (btn && files.length) btn.disabled = false;
     }
   }).catch(console.error);
+}
+
+function saveRun() {
+  if (state.run) state.run.updatedAt = Date.now();
+  db.put('meta', state.run, 'run').catch(console.error);
+}
+
+function markPhotosSaved() {
+  const run = state.run;
+  if (run && run.itemId === state.route.id) {
+    run.photosSaved = true;
+    saveRun();
+  }
+}
+
+// Swap the current page for another without adding a Back step (one site to the next).
+function replaceTo(hash) {
+  replacing = true;
+  location.replace(hash);
+}
+
+// After posting (or skipping) a site in a run: on to the next one, or finish up.
+function advanceRun(item, pid, posted) {
+  const run = runFor(state, item, pid);
+  const pos = run ? run.queue.indexOf(pid) : -1;
+  if (run && pos < run.queue.length - 1) {
+    const next = run.queue[pos + 1];
+    run.at = pos + 1;
+    saveRun();
+    replaceTo(`#/item/${item.id}/post/${next}`);
+    toast(`${posted ? `Posted on ${platformName(pid)}. ` : ''}Next: ${platformName(next)}`);
+    return;
+  }
+  const count = run ? run.queue.filter((id) => isListedOn(item, id)).length : 0;
+  state.run = null;
+  saveRun();
+  goTo(`#/item/${item.id}`);
+  if (count > 1) toast(`Posted on ${count} sites 🎉`);
+  else if (posted) toast(`Marked as posted on ${platformName(pid)}`);
 }
 
 function download(blob, name) {
@@ -616,9 +672,10 @@ function cleanItem(raw) {
   item.id = String(raw.id);
   item.status = ['tolist', 'listed', 'pending', 'sold', 'done'].includes(raw.status) ? raw.status : 'tolist';
   item.photos = Array.isArray(raw.photos) ? raw.photos.map(String) : [];
+  item.shots = Array.isArray(raw.shots) ? raw.shots.map(String) : [];
   item.history = Array.isArray(raw.history) ? raw.history : base.history;
   item.listings = raw.listings && typeof raw.listings === 'object' ? raw.listings : {};
-  for (const key of ['title', 'description', 'category', 'condition', 'foundWhere', 'storedAt', 'notes']) {
+  for (const key of ['title', 'description', 'category', 'condition', 'size', 'foundWhere', 'storedAt', 'notes']) {
     item[key] = typeof item[key] === 'string' ? item[key] : '';
   }
   return item;
@@ -759,7 +816,8 @@ const actions = {
     await save(item);
     closeSheet();
     render();
-    toast('Marked as pending');
+    if (item.pending.when) toast('Marked as pending', false, { label: 'Add to calendar', run: () => openSheet('calendar') });
+    else toast('Marked as pending');
   },
   async 'fell-through'() {
     const item = currentItem();
@@ -931,11 +989,14 @@ const actions = {
     const files = state.kit?.files;
     if (!files?.length) return;
     if (state.isIOS && state.canShareFiles) {
-      navigator.share({ files }).catch((err) => {
-        if (err?.name !== 'AbortError') downloadAll(files);
+      navigator.share({ files }).then(markPhotosSaved).catch((err) => {
+        if (err?.name !== 'AbortError') downloadAll(files).then(markPhotosSaved);
       });
     } else {
-      downloadAll(files).then(() => toast(`${plural(files.length, 'photo')} saved to Downloads`));
+      downloadAll(files).then(() => {
+        markPhotosSaved();
+        toast(`${plural(files.length, 'photo')} saved to Downloads`);
+      });
     }
   },
   'share-all'() {
@@ -961,8 +1022,64 @@ const actions = {
     const url = $('[data-kit="url"]')?.value || '';
     markListed(item, pid, url);
     await save(item);
-    toast(`Marked as posted on ${platformName(pid)}`);
-    goTo(`#/item/${item.id}`);
+    advanceRun(item, pid, true);
+  },
+  'run-skip'() {
+    advanceRun(currentItem(), state.route.platform, false);
+  },
+  'pick-site'(el) {
+    const id = el.dataset.platform;
+    if (!state.pick) state.pick = new Set();
+    if (state.pick.has(id)) state.pick.delete(id);
+    else state.pick.add(id);
+    render();
+  },
+  async 'start-run'() {
+    const item = currentItem();
+    const queue = PLATFORMS.map((p) => p.id).filter((id) => state.pick?.has(id));
+    if (!item || !queue.length) return;
+    state.settings.usualSites = queue;
+    saveSettings().catch(console.error);
+    state.run = { itemId: item.id, queue, at: 0, photosSaved: false };
+    saveRun();
+    goTo(`#/item/${item.id}/post/${queue[0]}`);
+  },
+  'resume-run'() {
+    const run = state.run;
+    if (run) goTo(`#/item/${run.itemId}/post/${run.queue[run.at]}`);
+  },
+  'stop-run'() {
+    state.run = null;
+    saveRun();
+    render();
+  },
+  async 'copy-reply'(el) {
+    const item = currentItem();
+    const reply = item && quickReplies(item, state.settings).find((r) => r.id === el.dataset.reply);
+    if (!reply) return;
+    if (!(await copyText(reply.text))) {
+      toast("Couldn't copy. Press and hold the text to copy it instead.", true);
+      return;
+    }
+    const label = el.querySelector('.reply-copy span');
+    el.classList.add('copied');
+    if (label) label.textContent = 'Copied';
+    setTimeout(() => {
+      el.classList.remove('copied');
+      if (label) label.textContent = 'Copy';
+    }, 1800);
+  },
+  'cal-google'() {
+    const ev = pickupEvent(currentItem(), state.settings);
+    if (ev) window.open(googleCalendarUrl(ev), '_blank', 'noopener');
+  },
+  'cal-ics'() {
+    const ev = pickupEvent(currentItem(), state.settings);
+    if (!ev) return;
+    const file = new File([icsFile(ev)], 'pickup.ics', { type: 'text/calendar' });
+    // iPhone: the share sheet (Calendar isn't always offered, so the sheet explains Mail and Google).
+    if (state.isIOS && navigator.canShare?.({ files: [file] })) navigator.share({ files: [file] }).catch(() => {});
+    else download(file, file.name);
   },
 
   ai: startAi,
@@ -1158,8 +1275,22 @@ function onChange(e) {
     if (el.dataset.pick === 'restore') restore(files?.[0]);
     else if (files?.length) addPhotos(files, el.dataset.pick);
     el.value = '';
+  } else if (el.dataset.shot) {
+    const item = currentItem();
+    if (!item) return;
+    const shots = new Set(item.shots || []);
+    if (el.checked) shots.add(el.dataset.shot);
+    else shots.delete(el.dataset.shot);
+    item.shots = [...shots];
+    saveSoon(item);
+    const { done, total } = shotCount(item);
+    $('#shot-count').textContent = `${done} of ${total}`;
   } else if (el.dataset.field) {
     updateField(el, true);
+    if (el.dataset.field === 'category') {
+      const list = $('.shot-list');
+      if (list) list.outerHTML = shotList(currentItem());
+    }
   } else if (el.dataset.setting) {
     const key = el.dataset.setting;
     state.settings[key] = el.type === 'checkbox' ? el.checked : key === 'staleDays' ? Number(el.value) : el.value;
@@ -1189,9 +1320,11 @@ async function start() {
     return;
   }
   try {
-    const [items, settings, lastBackup, snooze] = await Promise.all([
+    const [items, settings, lastBackup, snooze, run] = await Promise.all([
       db.getAll('items'), db.get('meta', 'settings'), db.get('meta', 'lastBackup'), db.get('meta', 'backupSnooze'),
+      db.get('meta', 'run'),
     ]);
+    state.run = run && Array.isArray(run.queue) ? run : null;
     state.items = items;
     state.settings = { ...DEFAULT_SETTINGS, ...(settings || {}) };
     if (!Array.isArray(state.settings.platforms)) state.settings.platforms = DEFAULT_PLATFORMS;

@@ -36,6 +36,28 @@ export const CONDITIONS = [
 
 export const conditionLabel = (id) => CONDITIONS.find((c) => c.id === id)?.label || '';
 
+// The shots buyers want to see. Everything gets the basics; some kinds of item get extras.
+const BASIC_SHOTS = [
+  { id: 'front', label: 'The whole thing, from the front' },
+  { id: 'sides', label: 'Back and sides' },
+  { id: 'label', label: 'Brand name, label or model sticker' },
+  { id: 'flaws', label: 'Any wear or damage, up close' },
+];
+const EXTRA_SHOTS = {
+  Furniture: [{ id: 'open', label: 'Drawers or doors open' }, { id: 'scale', label: 'Tape measure across it' }],
+  Appliances: [{ id: 'working', label: 'Turned on and working' }],
+  Electronics: [{ id: 'working', label: 'Turned on and working' }, { id: 'parts', label: 'Cords, remotes and extras' }],
+  'Tools & Garage': [{ id: 'working', label: 'Running or working' }],
+  'Clothing & Shoes': [{ id: 'tag', label: 'Size tag' }, { id: 'flat', label: 'Laid flat or on a hanger' }],
+  'Bags & Accessories': [{ id: 'inside', label: 'Inside and lining' }],
+  Bikes: [{ id: 'tires', label: 'Tires, brakes and gears' }],
+  'Toys & Games': [{ id: 'pieces', label: 'All the pieces laid out' }],
+  'Baby & Kids': [{ id: 'pieces', label: 'All the pieces laid out' }],
+  'Home Decor & Art': [{ id: 'scale', label: 'Something for size next to it' }],
+};
+
+export const photoChecklist = (category) => [...BASIC_SHOTS, ...(EXTRA_SHOTS[category] || [])];
+
 // The wording to pick on a given site, when that site has its own list.
 export const conditionFor = (platformId, id) => platform(platformId)?.conditions?.[id] || conditionLabel(id);
 
@@ -52,6 +74,7 @@ export function buildDescription(item, platformId, settings = {}) {
   const body = (item.description || '').trim();
   if (body) parts.push(body);
   const lines = [];
+  if (item.size?.trim()) lines.push(`Size: ${item.size.trim()}`);
   if (settings.addCondition !== false && item.condition) {
     lines.push(`Condition: ${conditionLabel(item.condition)}`);
   }
@@ -109,6 +132,7 @@ export function sellerNotes(item) {
   const notes = [];
   if (item.title?.trim()) notes.push(`Seller's title so far: ${item.title.trim()}`);
   if (item.condition) notes.push(`Seller says condition is: ${conditionLabel(item.condition)}`);
+  if (item.size?.trim()) notes.push(`Measurements: ${item.size.trim()}`);
   if (item.description?.trim()) notes.push(`Seller's notes: ${item.description.trim()}`);
   if (item.notes?.trim()) notes.push(`Private notes (don't quote): ${item.notes.trim()}`);
   return notes.length ? `\n${notes.join('\n')}\n` : '';

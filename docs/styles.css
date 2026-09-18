@@ -91,7 +91,7 @@ svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width:
   pointer-events: none;
 }
 
-.offscreen { position: fixed; top: -1000px; left: 0; opacity: 0; }
+.offscreen { position: fixed; top: 0; left: -9999px; opacity: 0; font-size: 16px; }
 
 :focus-visible { outline: 3px solid color-mix(in srgb, var(--accent) 55%, transparent); outline-offset: 2px; }
 
@@ -604,6 +604,7 @@ body[data-page="money"] .page { padding-bottom: calc(var(--tabbar-h) + 40px + en
 .platform-check .muted { margin-left: auto; }
 
 .link-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.link-grid > :last-child:nth-child(odd) { grid-column: 1 / -1; }
 
 .posted-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--line); }
 .posted-row:first-of-type { padding-top: 0; }

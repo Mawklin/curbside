@@ -180,7 +180,7 @@ export const TOURS = {
     { target: '#status-panel', title: 'What to do next', text: 'This box changes as your find moves along: <b>Post it</b>, then <b>Mark pending</b> when someone is coming, then <b>Sold it!</b>' },
     { target: '.btn-ai', title: 'Write it for me', text: 'Free AI looks at your photos, names the item, writes the listing and suggests a price.' },
     { target: '[data-field="title"]', title: 'Just type', text: "Tap any box to change it. Everything saves by itself, so there's no Save button to look for." },
-    { target: '#worth-card', title: "What's it worth?", text: 'Looks up what similar things sell for on eBay, Marketplace and OfferUp.' },
+    { target: '#worth-card', title: "What's it worth?", text: 'Looks up what similar things sell for on eBay, Marketplace, OfferUp and Vinted.' },
     { target: '.replies summary', title: 'Reply to buyers', text: 'Ready-made answers to "Is this still available?" and the rest. Tap one to copy it into the chat.' },
     { target: '#private-card', title: 'Just for you', text: "Where you found it, where it's stored and what you spent on it. None of this goes in a listing." },
     { target: '.topbar [data-action="delete-item"]', title: 'Delete', text: 'Removes this find. Tapped it by mistake? Tap <b>Undo</b> on the message that pops up.', done: 'Got it' },

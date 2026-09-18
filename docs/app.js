@@ -20,7 +20,7 @@ import {
 } from './views.js';
 
 // Bump together with CACHE in sw.js on every release, or installed phones keep old files.
-const VERSION = '1.3.0';
+const VERSION = '1.3.1';
 
 const DEFAULT_SETTINGS = {
   pickupArea: '',
@@ -443,22 +443,38 @@ async function downloadAll(files) {
 }
 
 async function copyText(text) {
-  try {
-    await navigator.clipboard.writeText(text);
-    return true;
-  } catch {
-    const ta = document.createElement('textarea');
-    ta.value = text;
-    ta.setAttribute('readonly', '');
-    ta.className = 'offscreen';
-    document.body.append(ta);
-    ta.select();
-    ta.setSelectionRange(0, text.length);
-    let ok = false;
-    try { ok = document.execCommand('copy'); } catch { ok = false; }
-    ta.remove();
-    return ok;
+  if (navigator.clipboard?.writeText) {
+    // If the phone refuses, say so rather than falling back to the old select-a-hidden-box trick:
+    // on iPhone that trick zooms and shifts the page, which is what froze the AI pop-up.
+    try {
+      await navigator.clipboard.writeText(text);
+      return true;
+    } catch {
+      return false;
+    }
   }
+  return legacyCopy(text);
+}
+
+// Only for browsers with no clipboard API. 16px text so iPhone doesn't zoom, no scrolling, and
+// focus and scroll position are put back afterwards.
+function legacyCopy(text) {
+  const before = document.activeElement;
+  const { scrollX, scrollY } = window;
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.setAttribute('readonly', '');
+  ta.className = 'offscreen';
+  document.body.append(ta);
+  ta.focus({ preventScroll: true });
+  ta.select();
+  ta.setSelectionRange(0, text.length);
+  let ok = false;
+  try { ok = document.execCommand('copy'); } catch { ok = false; }
+  ta.remove();
+  before?.focus?.({ preventScroll: true });
+  window.scrollTo(scrollX, scrollY);
+  return ok;
 }
 
 function flashCopied(btn) {
@@ -591,6 +607,15 @@ async function startAi() {
     if (err.message === CANCELLED || state.ai?.abort !== abort) return;
     state.ai = { phase: 'error', error: err.message };
   }
+  renderSheet();
+}
+
+function waitForAnswer() {
+  const ai = state.ai;
+  if (!ai || !['choose', 'waiting'].includes(ai.phase)) return;
+  ai.sharing = false;
+  ai.phase = 'waiting';
+  if (state.sheet?.type !== 'ai') state.sheet = { type: 'ai' };
   renderSheet();
 }
 
@@ -1124,13 +1149,19 @@ const actions = {
   'ai-share'() {
     const ai = state.ai;
     if (!ai?.files) return;
-    // The question also goes on the clipboard, since some apps only take the photos.
-    copyText(ai.prompt);
-    const data = navigator.canShare?.({ files: ai.files, text: ai.prompt }) ? { files: ai.files, text: ai.prompt } : { files: ai.files };
-    navigator.share(data).catch(() => {});
+    const withText = { files: ai.files, text: ai.prompt };
+    const data = navigator.canShare?.(withText) ? withText : { files: ai.files };
+    ai.sharing = true;
+    navigator.share(data).then(() => {
+      if (state.ai === ai) waitForAnswer();
+    }).catch((err) => {
+      ai.sharing = false;
+      if (err?.name === 'InvalidStateError') toast('The share menu is still open. Close it, then tap Send again.', true);
+    });
   },
   async 'ai-copy-prompt'() {
-    if (await copyText(state.ai?.prompt || '')) toast('Question copied. Paste it into ChatGPT with the photos.');
+    if (await copyText(state.ai?.prompt || '')) toast('Question copied. Paste it into the AI app with the photos.');
+    else toast("Couldn't copy. Tap Send again instead.", true);
   },
   'ai-save-photos'() {
     if (state.ai?.files) downloadAll(state.ai.files);
@@ -1379,7 +1410,18 @@ async function start() {
   document.addEventListener('input', onInput);
   document.addEventListener('change', onChange);
   document.addEventListener('focusin', onFocusIn);
-  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') flushAll(); });
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') {
+      flushAll();
+      return;
+    }
+    // Back from another app (the AI app, Facebook...). iPhone can leave taps landing in the
+    // wrong place after a trip away with a pop-up open, so redraw it and settle the page.
+    if (state.ai?.sharing) waitForAnswer();
+    else if (state.sheet) renderSheet();
+    document.activeElement?.blur?.();
+    window.scrollTo(window.scrollX, window.scrollY);
+  });
   window.addEventListener('pagehide', flushAll);
   window.addEventListener('hashchange', onHashChange);
   window.addEventListener('keydown', (e) => { if (e.key === 'Escape' && state.sheet) closeSheet(); });

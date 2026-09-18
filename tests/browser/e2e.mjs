@@ -232,7 +232,35 @@ if (await page.locator('[data-action="ai-copy-prompt"]').count()) {
   assert.match(await page.evaluate(() => navigator.clipboard.readText()), /TITLE: \.\.\./);
   step('no share sheet: "Copy the question" route shown');
 } else {
-  step('share sheet available: "Send to ChatGPT" route shown');
+  // Her bug: Send to an AI app, go to Claude, come back -> frozen. Recreate it the way an
+  // iPhone behaves: the clipboard refuses while the share sheet opens, the page is hidden while
+  // she's in the other app, then comes back.
+  await page.evaluate(() => {
+    window.__shared = null;
+    Object.defineProperty(navigator, 'share', { configurable: true, value: (data) => new Promise((ok) => { window.__shared = data; setTimeout(ok, 300); }) });
+    Object.defineProperty(navigator.clipboard, 'writeText', { configurable: true, value: () => Promise.reject(new DOMException('Document is not focused.', 'NotAllowedError')) });
+  });
+  await page.click('[data-action="ai-share"]');
+  const sent = await page.evaluate(() => ({ files: window.__shared?.files?.length, text: (window.__shared?.text || '').slice(0, 40) }));
+  assert.ok(sent.files >= 1 && /help someone/.test(sent.text), 'photos and question go in the share itself');
+  assert.equal(await page.evaluate(() => document.querySelectorAll('textarea.offscreen').length + (document.activeElement?.tagName === 'TEXTAREA' ? 1 : 0)), 0, 'no hidden box grabbed focus');
+  await page.evaluate(() => {
+    Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => 'hidden' });
+    document.dispatchEvent(new Event('visibilitychange'));
+  });
+  await page.waitForTimeout(400);
+  await page.evaluate(() => {
+    Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => 'visible' });
+    document.dispatchEvent(new Event('visibilitychange'));
+  });
+  await page.waitForSelector('.sheet [data-action="ai-paste"].btn-big');
+  assert.match(await page.locator('.sheet h2').innerText(), /Now get the answer/);
+  await page.waitForTimeout(300);
+  await shot('09b-ai-waiting');
+  await page.click('.sheet [data-action="ai-copy-prompt"]');
+  assert.match(await toastText(), /Couldn't copy/, 'a refused copy says so instead of fighting the page');
+  await page.evaluate(() => { delete navigator.clipboard.writeText; delete navigator.share; });
+  step('Send to an AI app: no clipboard fight, back from the AI app lands on "Now get the answer"');
 }
 await page.evaluate((t) => navigator.clipboard.writeText(t), `**TITLE:** Red beach cruiser bike, 26"\n**PRICE:** $85\n**PRICE RANGE:** $60 - $120\n**CATEGORY:** Bikes\n**CONDITION:** Used - Good\n**DESCRIPTION:**\nClassic red beach cruiser with 26" wheels and a comfy saddle. Rides smoothly; some surface rust on the chain.`);
 await page.click('[data-action="ai-paste"]');
@@ -244,6 +272,10 @@ assert.equal(await page.inputValue('[data-field="title"]'), 'Red beach cruiser b
 assert.equal(await page.inputValue('[data-field="price"]'), '85');
 assert.equal(await page.inputValue('[data-field="category"]'), 'Bikes');
 step('free AI route: pasted answer fills the listing');
+const [vinted] = await Promise.all([page.waitForEvent('popup'), page.click('[data-check="vinted"]')]);
+assert.match(vinted.url(), /^https:\/\/www\.vinted\.com\/catalog\?search_text=Red%20beach%20cruiser/);
+await vinted.close();
+step('Vinted price check opens a Vinted search for the title');
 
 // 7. AI with a key (Gemini mocked)
 let geminiBody = null;

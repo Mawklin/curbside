@@ -95,5 +95,6 @@ export const PRICE_CHECKS = [
   { id: 'ebay', label: 'eBay sold', url: (t) => `https://www.ebay.com/sch/i.html?_nkw=${q(t)}&LH_Sold=1&LH_Complete=1` },
   { id: 'facebook', label: 'Marketplace', url: (t) => `https://www.facebook.com/marketplace/search/?query=${q(t)}` },
   { id: 'offerup', label: 'OfferUp', url: (t) => `https://offerup.com/search?q=${q(t)}` },
+  { id: 'vinted', label: 'Vinted', url: (t) => `https://www.vinted.com/catalog?search_text=${q(t)}` },
   { id: 'google', label: 'Google', url: (t) => `https://www.google.com/search?q=${q(`${t} price`)}` },
 ];

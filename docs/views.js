@@ -863,21 +863,34 @@ function aiSheet(s, item) {
       <p class="hint">AI can be wrong. Check the details, and use "What's it worth?" to check the price.</p>
       <div class="sheet-actions"><button class="btn" data-action="close-sheet">Cancel</button><button class="btn btn-primary" data-action="ai-apply">Use these</button></div>`;
   }
+  if (ai.phase === 'waiting') {
+    return `<h2>${ICON.sparkle} Now get the answer</h2>
+      <ol class="mini-steps">
+        <li>In the AI app, send the message. The photos and question should already be in it.</li>
+        <li>When it answers, copy the whole answer (press and hold it, then Copy, or use its copy button).</li>
+        <li>Come back here and tap <b>Paste answer</b>.</li>
+      </ol>
+      <button class="btn btn-primary btn-block btn-big" data-action="ai-paste">Paste answer</button>
+      <div class="btn-row"><button class="btn btn-small" data-action="ai-copy-prompt">${ICON.copy} Copy the question</button><button class="btn btn-small" data-action="ai-share">${ICON.share} Send again</button></div>
+      <p class="hint">If the question didn't show up in the AI app, tap Copy the question and paste it in there.</p>
+      <div class="sheet-actions"><button class="btn btn-ghost" data-action="close-sheet">Close</button></div>`;
+  }
   // No key: the free route through an AI app she already has.
   const canShare = s.canShareFiles;
   return `<h2>${ICON.sparkle} Write it for me</h2>
     <p>AI looks at your photos, works out what it is, writes the listing and suggests a price.</p>
     <div class="option">
-      <h3>Free, with ChatGPT</h3>
+      <h3>Free, with an AI app you already have</h3>
       <ol class="mini-steps">
         ${canShare
-    ? '<li>Tap <b>Send to ChatGPT</b> and pick ChatGPT from the list (Gemini or Claude work too).</li><li>Send it. If only the photos show up, paste: the question is already copied.</li>'
-    : '<li>Tap <b>Copy the question</b> and <b>Save photos</b>, then open ChatGPT, add the photos and paste.</li>'}
-        <li>Copy ChatGPT's whole answer, come back here and tap <b>Paste answer</b>.</li>
+    ? '<li>Tap <b>Send to an AI app</b> and pick ChatGPT, Claude or Gemini from the list.</li>'
+    : '<li>Tap <b>Copy the question</b> and <b>Save photos</b>, then open ChatGPT or Claude, add the photos and paste.</li>'}
+        <li>Send it there, then copy the whole answer.</li>
+        <li>Come back here and tap <b>Paste answer</b>.</li>
       </ol>
       <div class="btn-row">
         ${canShare
-    ? `<button class="btn btn-primary" data-action="ai-share" ${ai.files ? '' : 'disabled'}>${ICON.share} Send to ChatGPT</button>`
+    ? `<button class="btn btn-primary" data-action="ai-share" ${ai.files ? '' : 'disabled'}>${ICON.share} Send to an AI app</button>`
     : `<button class="btn" data-action="ai-copy-prompt">${ICON.copy} Copy the question</button><button class="btn" data-action="ai-save-photos" ${ai.files ? '' : 'disabled'}>${ICON.image} Save photos</button>`}
         <button class="btn" data-action="ai-paste">Paste answer</button>
       </div>

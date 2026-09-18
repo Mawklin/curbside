@@ -1,0 +1,86 @@
+# Curbside
+
+A phone app for flipping curbside finds. Snap a photo, price it, get it ready to post on Facebook
+Marketplace, OfferUp, Craigslist, Nextdoor, Mercari, eBay or Poshmark, and track it all the way to
+sold and how much you made.
+
+It's a plain web app (HTML/CSS/JS in `docs/`, no build step) that installs to the Home Screen and
+works offline. **Everything is stored on the phone** (IndexedDB), so nobody else can see her
+inventory and there's no server to pay for.
+
+## What it does
+
+- **Add a find**: the camera button takes photos or picks from the library. Photos are shrunk to
+  1600px JPEGs plus thumbnails as they're saved, so it stays fast.
+- **Items**: statuses To list → Listed → Pending → Sold (or Kept/Gave away/Donated/Tossed), a
+  to-do strip (pickups coming up, ready to post, needs details, listed too long, sold but still
+  posted), search, and filters.
+- **Post it**: pick a site, then a four-step kit: save the photos to the camera roll (iPhone share
+  sheet → Save Images; downloads elsewhere), open the site's sell page, copy title / price /
+  description one tap each, then "I posted it". Descriptions get her pickup area and footer on local
+  sites but not on ship-only ones; Facebook's condition wording is spelled out.
+- **After posting**: "Mark pending" (buyer, pickup time, agreed price), "Sold it!" (price, site,
+  fees), then a reminder to take it down from the other sites. Listings older than the reminder
+  setting (14 days by default) get one-tap price drops or "I renewed it".
+- **What's it worth?**: searches the title on eBay sold listings, Marketplace, OfferUp and Google.
+- **Write it for me** (optional AI): works out what the item is from the photos, writes the title and
+  description, and suggests a price. Free either way:
+  - no key: shares the photos + a prompt to ChatGPT (or any AI app); she pastes the answer back;
+  - with a free Google AI Studio key: one tap, using Gemini's free tier straight from the phone.
+- **Money**: profit this month / year / all time, average sale, days to sell, what's waiting to sell,
+  a 6-month chart, profit by site, and a spreadsheet (CSV) download.
+- **Backup**: a `.zip` with every item and photo (plus `inventory.csv`) saved to Files / Drive /
+  email. Restore merges it back in. The app nags every two weeks once there are 3+ items. The AI
+  key is never put in a backup.
+
+## Why it posts the way it does
+
+None of these sites let an outside app create listings for a regular seller (no public API for
+Marketplace, OfferUp, Craigslist, Nextdoor), so "posting" means getting everything ready to paste
+and opening the site's own sell page. On a phone with the site's app installed, those links usually
+open the app; if they open a web page she can switch to the app herself.
+
+## Installing on her phone
+
+It has to be served over HTTPS (GitHub Pages works: serve `docs/` from the main branch).
+
+- **iPhone**: open the link in Safari → Share → **Add to Home Screen**. Do this before real use:
+  Safari can clear data for websites that haven't been opened in a while, but Home Screen apps keep
+  theirs. The app shows this tip until it's installed.
+- **Android**: Chrome shows an Install button in the app (or ⋮ → Install app).
+
+A new address means a new app as far as the phone is concerned: data only moves across via
+Backup → Restore.
+
+## Releasing a change
+
+Bump `VERSION` in `docs/app.js` **and** `CACHE` in `docs/sw.js` together. The service worker is
+cache-first, so without the bump installed phones keep the old files.
+
+## Working on it
+
+- Preview: the `curbside` config in `D:\Epic Games\.claude\launch.json` serves `docs/` on
+  http://localhost:5174. The service worker is skipped on localhost so edits show straight away;
+  add `?sw` to the URL to test offline mode.
+- Tests: `node --test tests/logic.test.mjs` (listing text, AI-answer parsing, sales maths, price
+  drops, spreadsheet, backup zip round-trip).
+- Icons: `node tools/make-icons.mjs` redraws `docs/icons/` (borrows `sharp` from the Lessons app's
+  worker folder).
+- The page's security policy blocks inline `style=""` attributes, so sizes set at runtime go
+  through `el.style` in `app.js` (see `afterRender`). Everything user-typed goes through `esc()`.
+- The only outside address the app may call is `generativelanguage.googleapis.com` (the optional
+  AI). Adding any other service means adding it to the `connect-src` in `docs/index.html`.
+
+## Files
+
+| File | What's in it |
+|---|---|
+| `docs/app.js` | state, navigation, saving, every button's action, backup/restore |
+| `docs/views.js` | every screen as HTML |
+| `docs/model.js` | an item's life (listed, pending, sold…), money maths, to-do lists, CSV |
+| `docs/listing.js` | categories, conditions, description builder, AI prompt + answer parsing |
+| `docs/platforms.js` | the selling sites, their post/search links |
+| `docs/photos.js` | shrinking photos, rotating, blob URLs, files for sharing |
+| `docs/ai.js` | Gemini free-tier call with model fallback |
+| `docs/zip.js` | minimal zip writer/reader for backups |
+| `docs/db.js` | IndexedDB |

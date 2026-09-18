@@ -7,7 +7,7 @@ import { readZip } from 'file:///D:/Epic%20Games/curbside/docs/zip.js';
 const SCRATCH = 'D:/Epic Games/curbside/tests/browser/out';
 const SHOTS = `${SCRATCH}/shots`;
 const DEMO = `${SCRATCH}/demo`;
-const BASE = 'http://127.0.0.1:5174/';
+const BASE = 'http://127.0.0.1:5174/?notour';
 mkdirSync(SHOTS, { recursive: true });
 
 const browser = await chromium.launch({ executablePath: 'C:/Program Files/Google/Chrome/Application/chrome.exe', headless: true });

@@ -3,7 +3,7 @@
 import { chromium } from 'playwright-core';
 import { mkdirSync } from 'node:fs';
 
-const URL_ = process.argv[2] || 'https://mawklin.github.io/curbside/';
+const URL_ = process.argv[2] || 'https://mawklin.github.io/curbside/?notour';
 const OUT = 'D:/Epic Games/curbside/tests/browser/out';
 mkdirSync(`${OUT}/live`, { recursive: true });
 

@@ -13,13 +13,14 @@ import {
 } from './photos.js';
 import { suggestListing, findKey, CANCELLED, GEMINI_MODELS } from './ai.js';
 import { makeZip, readZip } from './zip.js';
+import { runTour, stopTour, tourActive, TOURS } from './tour.js';
 import {
   itemsView, gridHtml, chipsHtml, itemView, statusPanel, postPickView, kitView, moneyView, settingsView,
   sheetView, monthChart, monthCaption, ICON, runFor, shotList, shotCount,
 } from './views.js';
 
 // Bump together with CACHE in sw.js on every release, or installed phones keep old files.
-const VERSION = '1.2.0';
+const VERSION = '1.3.0';
 
 const DEFAULT_SETTINGS = {
   pickupArea: '',
@@ -29,7 +30,11 @@ const DEFAULT_SETTINGS = {
   platforms: DEFAULT_PLATFORMS,
   geminiKey: '',
   hideInstall: false,
+  tours: {}, // which screens' tours she has seen
 };
+
+// Tests add ?notour so the walkthrough doesn't cover the screens they're checking.
+const noTour = new URLSearchParams(location.search).has('notour');
 
 const isIOS = /iP(hone|od|ad)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 
@@ -201,6 +206,7 @@ let routeToken = 0;
 
 async function route() {
   const token = ++routeToken;
+  stopTour();
   const parts = location.hash.replace(/^#\/?/, '').split('/').filter(Boolean);
   const prev = state.route;
   if (prev.name === 'items') state.listScroll = window.scrollY;
@@ -260,6 +266,7 @@ async function route() {
   if (token !== routeToken) return;
   state.route = r;
   render();
+  maybeTour();
   if (r.name === 'items' && prev.name !== 'items') window.scrollTo(0, state.listScroll || 0);
   else if (prev.name !== r.name || prev.id !== r.id) window.scrollTo(0, 0);
 }
@@ -316,6 +323,31 @@ function refreshPanel() {
   const item = currentItem();
   const panel = $('#status-panel');
   if (item && panel) panel.outerHTML = statusPanel(state, item);
+}
+
+// ---------- tours ----------
+
+const TOUR_FOR = { items: 'home', item: 'item', post: 'post', kit: 'kit', money: 'money' };
+
+function maybeTour() {
+  let key = TOUR_FOR[state.route.name];
+  if (!key || noTour) return;
+  // iPhone in Safari: the Home Screen app keeps separate data, so only point her there.
+  if (key === 'home' && state.isIOS && !state.standalone) key = 'safari';
+  if (state.settings.tours?.[key]) return;
+  const at = state.route;
+  // Let the screen settle (photos load, fonts) before measuring where things are.
+  setTimeout(() => {
+    if (state.route !== at || state.sheet || tourActive() || $('#busy.on')) return;
+    runTour(TOURS[key](), (how) => {
+      state.settings.tours = { ...state.settings.tours, [key]: true };
+      // Skipping the very first tour means "no tours, thanks": don't pop up the others either.
+      if (key === 'home' && how === 'skip') {
+        for (const k of Object.keys(TOURS)) state.settings.tours[k] = true;
+      }
+      saveSettings().catch(console.error);
+    });
+  }, 450);
 }
 
 function openSheet(type, extra = {}) {
@@ -1154,6 +1186,12 @@ const actions = {
     render();
     $('#ai-settings')?.scrollIntoView({ block: 'start' });
     if (/^(AIza|AQ\.)/.test(key)) toast('Saved. "Write it for me" is now one tap.');
+  },
+  async 'replay-tour'() {
+    state.settings.tours = {};
+    await saveSettings();
+    if (state.route.name === 'items') maybeTour();
+    else goTo('#/');
   },
   async 'remove-key'() {
     if (!confirm('Remove the AI key from this phone?')) return;

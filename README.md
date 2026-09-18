@@ -10,6 +10,13 @@ inventory and there's no server to pay for.
 
 ## What it does
 
+- **Look**: deep purple with pink and lavender and white text, the same on every phone (she asked for no
+  white panels). Every text colour is checked with `node tools/check-contrast.mjs`.
+- **Guided tours**: the first time she opens the app, and the first time she opens a find, the
+  posting page, a site's steps or Money, the screen dims and each part is lit up in turn with a note
+  on what it's for. Skip on the first tour turns them all off; Settings → Show the tour again brings
+  them back. On iPhone in Safari the only step is "add it to your Home Screen", because the Home
+  Screen app keeps separate data. Add `?notour` to the URL to keep tours out of the way when testing.
 - **Add a find**: the camera button takes photos or picks from the library. Photos are shrunk to
   1600px JPEGs plus thumbnails as they're saved, so it stays fast.
 - **Items**: statuses To list → Listed → Pending → Sold (or Kept/Gave away/Donated/Tossed), a
@@ -73,7 +80,8 @@ cache-first, so without the bump installed phones keep the old files.
   http://localhost:5174. The service worker is skipped on localhost so edits show straight away;
   add `?sw` to the URL to test offline mode.
 - Tests: `node --test tests/logic.test.mjs` (listing text, AI-answer parsing, sales maths, price
-  drops, spreadsheet, backup zip round-trip).
+  drops, spreadsheet, backup zip round-trip, replies, calendar). Browser walkthroughs are in
+  `tests/browser/` (`e2e.mjs`, `tour.mjs`, `live-check.mjs`, `offline.mjs`).
 - Icons: `node tools/make-icons.mjs` redraws `docs/icons/` (borrows `sharp` from the Lessons app's
   worker folder).
 - The page's security policy blocks inline `style=""` attributes, so sizes set at runtime go
@@ -91,6 +99,7 @@ cache-first, so without the bump installed phones keep the old files.
 | `docs/listing.js` | categories, conditions, photo checklist, description builder, AI prompt + answer parsing |
 | `docs/replies.js` | ready-made buyer replies |
 | `docs/calendar.js` | pickup reminders: Google Calendar link and .ics file |
+| `docs/tour.js` | the dim-and-spotlight tour engine, and what each screen's tour says |
 | `docs/platforms.js` | the selling sites, their post/search links |
 | `docs/photos.js` | shrinking photos, rotating, blob URLs, files for sharing |
 | `docs/ai.js` | Gemini free-tier call with model fallback |

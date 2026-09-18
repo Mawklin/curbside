@@ -387,7 +387,7 @@ function detailsCard(item) {
   </section>`;
 }
 
-const priceCheckCard = () => `<section class="card">
+const priceCheckCard = () => `<section class="card" id="worth-card">
   <h2>What's it worth?</h2>
   <p class="hint">Searches your title on each site. eBay shows what things actually sold for.</p>
   <div class="link-grid">${PRICE_CHECKS.map((c) => `<button class="btn btn-small" data-action="price-check" data-check="${c.id}">${esc(c.label)} ${ICON.external}</button>`).join('')}</div>
@@ -421,7 +421,7 @@ function repliesCard(s, item) {
   </details>`;
 }
 
-const privateCard = (item) => `<section class="card">
+const privateCard = (item) => `<section class="card" id="private-card">
   <h2>Just for you</h2>
   <p class="hint">Never goes in a listing.</p>
   <div class="field-row">
@@ -658,12 +658,12 @@ export function moneyView(s) {
       <div class="stat"><div class="stat-label">Days to sell</div><div class="stat-value">${sum.avgDays !== null ? Math.round(sum.avgDays) : '–'}</div><div class="stat-sub">on average</div></div>
       <div class="stat"><div class="stat-label">Waiting to sell</div><div class="stat-value">${inv.count}</div><div class="stat-sub">${esc(money(inv.value))} asking</div></div>
     </div>
-    <section class="card">
+    <section class="card" id="chart-card">
       <h2>Profit, last 6 months</h2>
       <div class="chart-caption" id="month-caption">${monthCaption(months, pick)}</div>
       <div id="month-chart">${monthChart(months, pick)}</div>
     </section>
-    <section class="card"><h2>Where it sells</h2>${platformBars(sum)}</section>
+    <section class="card" id="sites-card"><h2>Where it sells</h2>${platformBars(sum)}</section>
     <section class="card">
       <h2>Sales</h2>
       ${recent.length ? `<div class="sales">${recent.map((i) => `<a class="sale-row" href="#/item/${esc(i.id)}">
@@ -736,6 +736,12 @@ export function settingsView(s) {
       ${s.persisted === false && !s.isIOS ? '<button class="btn btn-small" data-action="persist">Ask the browser to keep my data</button>' : ''}
       ${!s.standalone ? `<p class="hint">${s.isIOS ? 'Tip: add Curbside to your Home Screen (Share, then Add to Home Screen) so Safari never clears it.' : 'Tip: install Curbside from your browser menu so it opens like an app.'}</p>` : ''}
       ${s.settings.hideInstall && !s.standalone ? '<button class="btn btn-small btn-ghost" data-action="show-install">Show the install tip again</button>' : ''}
+    </section>
+
+    <section class="card">
+      <h2>Tour</h2>
+      <p class="hint">The walk-through that lights up each part of the app and says what it's for.</p>
+      <button class="btn btn-block" data-action="replay-tour">Show the tour again</button>
     </section>
 
     <section class="card card-danger">

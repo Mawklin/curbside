@@ -40,15 +40,30 @@ const PAIRS = [
 const FIXED = [...css.matchAll(/\.badge-(\w+) \{ background: (#[0-9a-f]{6}); \}/g)].map((m) => [`badge ${m[1]}`, m[2]]);
 
 let failed = 0;
-for (const [fg, bg, what] of PAIRS) {
-  if (!t[fg] || !t[bg]) {
-    console.log(`MISSING ${fg} or ${bg}`);
-    failed++;
-    continue;
+function checkPairs(name, tokens, verbose) {
+  let worst = Infinity;
+  for (const [fg, bg, what] of PAIRS) {
+    if (!tokens[fg] || !tokens[bg]) {
+      console.log(`MISSING ${name}: ${fg} or ${bg}`);
+      failed++;
+      continue;
+    }
+    const r = ratio(tokens[fg], tokens[bg]);
+    worst = Math.min(worst, r);
+    if (r < 4.5) failed++;
+    if (verbose || r < 4.5) console.log(`${r >= 4.5 ? 'ok  ' : 'FAIL'} ${r.toFixed(2).padStart(5)}  ${name}: ${fg} on ${bg} (${what})`);
   }
-  const r = ratio(t[fg], t[bg]);
-  if (r < 4.5) failed++;
-  console.log(`${r >= 4.5 ? 'ok  ' : 'FAIL'} ${r.toFixed(2).padStart(5)}  ${fg} on ${bg} (${what})`);
+  return worst;
+}
+checkPairs('default', t, true);
+
+// Every holiday theme in docs/themes.css, layered over the defaults like the browser does.
+const themes = readFileSync(new URL('../docs/themes.css', import.meta.url), 'utf8');
+for (const m of themes.matchAll(/\[data-theme="([\w-]+)"\] \{([^}]*)\}/g)) {
+  const tokens = { ...t };
+  for (const v of m[2].matchAll(/--([\w-]+):\s*(#[0-9a-fA-F]{6})\s*;/g)) tokens[v[1]] = v[2];
+  const worst = checkPairs(m[1], tokens, false);
+  console.log(`${worst >= 4.5 ? 'ok  ' : 'FAIL'} theme ${m[1].padEnd(13)} lowest pair ${worst.toFixed(2)}`);
 }
 for (const [name, bg] of FIXED) {
   const r = ratio('#ffffff', bg);

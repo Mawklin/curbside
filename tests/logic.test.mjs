@@ -280,3 +280,42 @@ test('pickup calendar event: Google link and .ics file', () => {
   assert.ok(ics.split('\r\n').every((line) => line.length <= 75), 'long lines folded');
   assert.equal(pickupEvent({ ...item, pending: { buyer: 'x' } }), null, 'no time, no event');
 });
+
+// ---------- v1.4: holiday themes ----------
+import { easter, hanukkah, holidayOn, THEMES, resolveTheme } from '../docs/themes.js';
+
+test('holiday dates', () => {
+  const day = (t) => new Date(t).toDateString();
+  const date = (id, y) => day(THEMES.find((t) => t.id === id).date(y));
+  assert.equal(day(easter(2026)), 'Sun Apr 05 2026');
+  assert.equal(day(easter(2027)), 'Sun Mar 28 2027');
+  assert.equal(day(hanukkah(2025)), 'Mon Dec 15 2025');
+  assert.equal(day(hanukkah(2026)), 'Sat Dec 05 2026');
+  assert.equal(date('mlk', 2026), 'Mon Jan 19 2026');
+  assert.equal(date('presidents', 2026), 'Mon Feb 16 2026');
+  assert.equal(date('mothersday', 2026), 'Sun May 10 2026');
+  assert.equal(date('memorial', 2026), 'Mon May 25 2026');
+  assert.equal(date('fathersday', 2026), 'Sun Jun 21 2026');
+  assert.equal(date('laborday', 2026), 'Mon Sep 07 2026');
+  assert.equal(date('thanksgiving', 2026), 'Thu Nov 26 2026');
+});
+
+test('Automatic picks the holiday that is on or coming up', () => {
+  const on = (s) => {
+    const [y, m, d] = s.split('-').map(Number);
+    return holidayOn(new Date(y, m - 1, d, 9).getTime());
+  };
+  assert.equal(on('2026-01-01'), 'newyear');
+  assert.equal(on('2026-02-10'), 'valentines');
+  assert.equal(on('2026-03-30'), 'easter');
+  assert.equal(on('2026-07-01'), 'july4');
+  assert.equal(on('2026-08-01'), 'curbside', 'no holiday: the original look');
+  assert.equal(on('2026-10-15'), 'halloween');
+  assert.equal(on('2026-11-20'), 'thanksgiving');
+  assert.equal(on('2026-12-09'), 'hanukkah', 'a holiday that has started beats one coming up');
+  assert.equal(on('2026-12-20'), 'christmas');
+  assert.equal(on('2026-12-26'), 'kwanzaa');
+  assert.equal(on('2026-12-31'), 'newyear');
+  assert.equal(resolveTheme('halloween'), 'halloween');
+  assert.equal(resolveTheme('nonsense'), 'curbside');
+});

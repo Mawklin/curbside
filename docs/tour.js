@@ -168,7 +168,7 @@ export const TOURS = {
     { target: '#chips', title: 'Filters', text: "Show what's To list, Listed, Pending or Sold. The search box finds anything by name, notes or where it's stored." },
     { target: '.tabbar .tab[href="#/"]', title: 'Items', text: "Everything you've found lives here. Tap a find to see it, change it, post it or mark it sold." },
     { target: '.tabbar .tab[href="#/money"]', title: 'Money', text: "What you've made this month and all time, which site sells best, and a spreadsheet download." },
-    { target: '.topbar a[href="#/settings"]', title: 'Settings', text: 'Your pickup area and the line added to every listing, which sites you use, the free AI helper, and backups.' },
+    { target: '.topbar a[href="#/settings"]', title: 'Settings', text: 'Holiday themes, your pickup area and the line added to every listing, which sites you use, the free AI helper, and backups.' },
     { target: '.notice-install', title: 'Install it', text: 'Tap <b>Install</b> so Curbside opens like an app and works with no signal.' },
     { target: '.notice-backup', title: 'Back up now and then', text: 'Your finds live only on this phone. A backup keeps a copy you can bring back if the phone is lost or reset.' },
     { title: "You're all set!", text: 'Tap the camera to add your first find. The first time you open a find, post one or check your money, a quick tour shows you what\'s there.', done: "Let's go" },

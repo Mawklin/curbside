@@ -5,6 +5,7 @@ import { PLATFORMS, PRICE_CHECKS, IN_PERSON, platform, platformName } from './pl
 import { CATEGORIES, CONDITIONS, conditionLabel, conditionFor, titleWarning, photoChecklist } from './listing.js';
 import { quickReplies } from './replies.js';
 import { pickupEvent } from './calendar.js';
+import { THEMES, theme, holidayOn } from './themes.js';
 import {
   STATUSES, DONE_REASONS, doneLabel, activeListings, isListedOn, needsDetails, readyToPost, isStale,
   todo, summarize, monthly, inventory, profit, daysToSell, priceDrops, freshAt,
@@ -57,10 +58,13 @@ const missingBits = (item) => [
 
 // ---------- shared chrome ----------
 
-export function tabbar(active) {
+const sticker = (s) => theme(s.themeId).emoji[0] || '';
+
+export function tabbar(active, s) {
+  const st = sticker(s);
   return `<nav class="tabbar" aria-label="Main">
     <a class="tab${active === 'items' ? ' on' : ''}" href="#/">${ICON.box}<span>Items</span></a>
-    ${photoPicker('new', `<span class="snap-circle">${ICON.camera}</span><span>Add a find</span>`, 'tab tab-snap')}
+    ${photoPicker('new', `<span class="snap-circle">${ICON.camera}${st ? `<span class="snap-sticker" aria-hidden="true">${st}</span>` : ''}</span><span>Add a find</span>`, 'tab tab-snap')}
     <a class="tab${active === 'money' ? ' on' : ''}" href="#/money">${ICON.chart}<span>Money</span></a>
   </nav>`;
 }
@@ -150,7 +154,7 @@ function itemCard(item, s) {
 export function gridHtml(s) {
   if (!s.items.length) {
     return `<section class="welcome">
-      <div class="welcome-art" aria-hidden="true">${ICON.tag}</div>
+      <div class="welcome-art${sticker(s) ? ' emoji' : ''}" aria-hidden="true">${sticker(s) || ICON.tag}</div>
       <h2>Found something good?</h2>
       <p>Snap it and Curbside keeps the photos, price and where it's posted together, then gets everything ready to paste into Marketplace, OfferUp and the rest.</p>
       ${photoPicker('new', `${ICON.camera}<span>Add your first find</span>`, 'btn btn-primary btn-big')}
@@ -233,7 +237,7 @@ function resumeCard(s) {
 
 export function itemsView(s) {
   return `<header class="topbar">
-    <div class="brand"><span class="brand-mark">${ICON.tag}</span><h1>Curbside</h1></div>
+    <div class="brand"><span class="brand-mark">${ICON.tag}</span><h1>Curbside</h1>${sticker(s) ? `<span class="brand-emoji" aria-hidden="true">${sticker(s)}</span>` : ''}</div>
     <a class="icon-btn" href="#/settings" aria-label="Settings">${ICON.gear}</a>
   </header>
   <main class="page page-items">
@@ -245,7 +249,7 @@ export function itemsView(s) {
     <div id="chips">${chipsHtml(s)}</div>` : ''}
     <div id="grid">${gridHtml(s)}</div>
   </main>
-  ${tabbar('items')}`;
+  ${tabbar('items', s)}`;
 }
 
 // ---------- One item ----------
@@ -675,16 +679,36 @@ export function moneyView(s) {
     </section>
     <button class="btn btn-block" data-action="export-csv">Download everything as a spreadsheet</button>
   </main>
-  ${tabbar('money')}`;
+  ${tabbar('money', s)}`;
 }
 
 // ---------- Settings ----------
+
+function themeCard(s) {
+  const choice = s.settings.theme || 'curbside';
+  const now = theme(holidayOn());
+  const tile = (id, name, when, pics, look) => `<button class="theme-tile${choice === id ? ' on' : ''}" data-action="set-theme" data-theme-id="${id}" aria-pressed="${choice === id}">
+      <span class="theme-swatch" data-theme="${look}" aria-hidden="true">${pics.slice(0, 3).join('')}</span>
+      <span class="theme-name">${esc(name)}</span>
+      <span class="theme-when">${esc(when)}</span>
+      ${choice === id ? `<span class="theme-check" aria-hidden="true">${ICON.check}</span>` : ''}
+    </button>`;
+  return `<section class="card" id="theme-card">
+    <h2>🎨 App theme</h2>
+    <p class="hint">Pick a look. <b>Automatic</b> switches to each holiday's theme as it comes up, and back to Curbside in between.</p>
+    <div class="theme-grid">
+      ${tile('auto', 'Automatic', `Right now: ${now.name}`, ['🗓️', ...(now.emoji.length ? now.emoji : now.icon).slice(0, 2)], now.id)}
+      ${THEMES.map((t) => tile(t.id, t.name, t.when, t.emoji.length ? t.emoji : t.icon, t.id)).join('')}
+    </div>
+  </section>`;
+}
 
 export function settingsView(s) {
   const st = s.settings;
   const used = s.storage?.usage;
   return `${subbar('Settings')}
   <main class="page page-settings">
+    ${themeCard(s)}
     <section class="card">
       <h2>Added to your listings</h2>
       <label class="field"><span class="field-label">Pickup area</span>

@@ -12,6 +12,14 @@ inventory and there's no server to pay for.
 
 - **Look**: deep purple with pink and lavender and white text, the same on every phone (she asked for no
   white panels). Every text colour is checked with `node tools/check-contrast.mjs`.
+- **App theme** (Settings, first card): the original Curbside purple, a theme for each major American
+  holiday (New Year's, MLK Day, Valentine's, Presidents' Day, St. Patrick's, Easter, Mother's Day,
+  Memorial Day, Father's Day, Juneteenth, Fourth of July, Labor Day, Halloween, Veterans Day,
+  Thanksgiving, Hanukkah, Christmas, Kwanzaa), or Automatic, which follows the calendar (Easter and
+  Hanukkah dates are worked out each year). Each theme has its own gradient and emoji: next to the
+  name, on the camera button, and faintly in the background. Colours are generated from a few key
+  colours per theme by `node tools/make-themes.mjs` (writes `docs/themes.css`), and every theme is
+  checked by `tools/check-contrast.mjs`.
 - **Guided tours**: the first time she opens the app, and the first time she opens a find, the
   posting page, a site's steps or Money, the screen dims and each part is lit up in turn with a note
   on what it's for. Skip on the first tour turns them all off; Settings → Show the tour again brings
@@ -99,6 +107,8 @@ cache-first, so without the bump installed phones keep the old files.
 | `docs/listing.js` | categories, conditions, photo checklist, description builder, AI prompt + answer parsing |
 | `docs/replies.js` | ready-made buyer replies |
 | `docs/calendar.js` | pickup reminders: Google Calendar link and .ics file |
+| `docs/themes.js` | theme names, emoji, holiday dates and Automatic |
+| `docs/themes.css` | generated colours for every theme (edit `tools/make-themes.mjs` instead) |
 | `docs/tour.js` | the dim-and-spotlight tour engine, and what each screen's tour says |
 | `docs/platforms.js` | the selling sites, their post/search links |
 | `docs/photos.js` | shrinking photos, rotating, blob URLs, files for sharing |

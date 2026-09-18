@@ -14,13 +14,14 @@ import {
 import { suggestListing, findKey, CANCELLED, GEMINI_MODELS } from './ai.js';
 import { makeZip, readZip } from './zip.js';
 import { runTour, stopTour, tourActive, TOURS } from './tour.js';
+import { AUTO, resolveTheme, theme } from './themes.js';
 import {
   itemsView, gridHtml, chipsHtml, itemView, statusPanel, postPickView, kitView, moneyView, settingsView,
   sheetView, monthChart, monthCaption, ICON, runFor, shotList, shotCount,
 } from './views.js';
 
 // Bump together with CACHE in sw.js on every release, or installed phones keep old files.
-const VERSION = '1.3.1';
+const VERSION = '1.4.0';
 
 const DEFAULT_SETTINGS = {
   pickupArea: '',
@@ -31,7 +32,14 @@ const DEFAULT_SETTINGS = {
   geminiKey: '',
   hideInstall: false,
   tours: {}, // which screens' tours she has seen
+  theme: 'curbside', // a theme id, or 'auto' to follow the holidays
 };
+
+// Put the last theme on straight away, before the saved settings load, so the colours don't flash.
+try {
+  const last = localStorage.getItem('curbside-theme');
+  if (last) document.documentElement.dataset.theme = last;
+} catch { /* storage blocked: the default look shows until settings load */ }
 
 // Tests add ?notour so the walkthrough doesn't cover the screens they're checking.
 const noTour = new URLSearchParams(location.search).has('notour');
@@ -72,6 +80,7 @@ const state = {
   storage: null,
   persisted: null,
   listScroll: 0,
+  themeId: 'curbside', // the theme showing now (Automatic resolves to a holiday)
 };
 
 const $ = (sel, root = document) => root.querySelector(sel);
@@ -323,6 +332,27 @@ function refreshPanel() {
   const item = currentItem();
   const panel = $('#status-panel');
   if (item && panel) panel.outerHTML = statusPanel(state, item);
+}
+
+// ---------- theme ----------
+
+function applyTheme() {
+  const id = resolveTheme(state.settings.theme || 'curbside');
+  const changed = id !== state.themeId;
+  state.themeId = id;
+  const root = document.documentElement;
+  root.dataset.theme = id;
+  // The faint pictures in the background, a few of the theme's emoji scattered round the edges.
+  const pics = theme(id).emoji;
+  const decor = $('#decor');
+  if (decor) {
+    decor.innerHTML = pics.length ? Array.from({ length: 7 }, (_, n) => `<span class="d${n + 1}">${pics[n % pics.length]}</span>`).join('') : '';
+  }
+  // Phone status bar matches the page.
+  const bg = getComputedStyle(root).getPropertyValue('--bg').trim();
+  if (bg) $('meta[name="theme-color"]')?.setAttribute('content', bg);
+  try { localStorage.setItem('curbside-theme', id); } catch { /* fine without it */ }
+  return changed;
 }
 
 // ---------- tours ----------
@@ -1218,6 +1248,14 @@ const actions = {
     $('#ai-settings')?.scrollIntoView({ block: 'start' });
     if (/^(AIza|AQ\.)/.test(key)) toast('Saved. "Write it for me" is now one tap.');
   },
+  async 'set-theme'(el) {
+    state.settings.theme = el.dataset.themeId;
+    await saveSettings();
+    applyTheme();
+    render();
+    const name = el.dataset.themeId === AUTO ? `Automatic (${theme(state.themeId).name} right now)` : theme(state.themeId).name;
+    toast(`Theme: ${name}`);
+  },
   async 'replay-tour'() {
     state.settings.tours = {};
     await saveSettings();
@@ -1263,6 +1301,7 @@ const actions = {
       state.items = [];
       state.settings = { ...DEFAULT_SETTINGS };
       state.lastBackup = null;
+      applyTheme();
       toast('Curbside is empty.');
       goTo('#/');
       render();
@@ -1399,6 +1438,7 @@ async function start() {
     if (!Array.isArray(state.settings.platforms)) state.settings.platforms = DEFAULT_PLATFORMS;
     state.lastBackup = lastBackup || null;
     state.backupSnooze = snooze || 0;
+    applyTheme();
   } catch (err) {
     console.error(err);
     $('#app').innerHTML = `<main class="page"><section class="notice notice-warn"><div><strong>Curbside can't save on this browser</strong>
@@ -1417,6 +1457,7 @@ async function start() {
     }
     // Back from another app (the AI app, Facebook...). iPhone can leave taps landing in the
     // wrong place after a trip away with a pop-up open, so redraw it and settle the page.
+    if (state.settings.theme === AUTO && applyTheme()) render();
     if (state.ai?.sharing) waitForAnswer();
     else if (state.sheet) renderSheet();
     document.activeElement?.blur?.();

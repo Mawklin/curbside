@@ -1,10 +1,12 @@
 // Keeps Curbside working with no signal (out on the road, in a garage). Bump CACHE together with
 // VERSION in app.js on every release so phones pick up the new files.
-const CACHE = 'curbside-1.3.1';
+const CACHE = 'curbside-1.4.0';
 const ASSETS = [
   './',
   'index.html',
   'styles.css',
+  'themes.css',
+  'themes.js',
   'app.js',
   'views.js',
   'model.js',

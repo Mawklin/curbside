@@ -47,7 +47,7 @@ inventory and there's no server to pay for.
 - **After posting**: "Mark pending" (buyer, pickup time, agreed price), "Sold it!" (price, site,
   fees), then a reminder to take it down from the other sites. Listings older than the reminder
   setting (14 days by default) get one-tap price drops or "I renewed it".
-- **What's it worth?**: searches the title on eBay sold listings, Marketplace, OfferUp and Google.
+- **What's it worth?**: searches the title on eBay sold listings, Marketplace, OfferUp, Vinted and Google.
 - **Write it for me** (optional AI): works out what the item is from the photos, writes the title and
   description, and suggests a price. Free either way:
   - no key: shares the photos + a prompt to ChatGPT (or any AI app); she pastes the answer back;

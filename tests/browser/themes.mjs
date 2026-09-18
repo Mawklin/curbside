@@ -20,10 +20,17 @@ page.on('console', (m) => { if (m.type() === 'error') problems.push(m.text()); }
 page.on('pageerror', (e) => problems.push(e.message));
 page.on('dialog', (d) => d.accept());
 
+// Settings sections start folded: open one (if it isn't already) before using what's inside.
+const openSection = async (id) => {
+  const d = page.locator(`details[data-section="${id}"]`);
+  if (!(await d.evaluate((el) => el.open))) await d.locator('summary').click();
+};
+
 // Some finds to look at.
 await page.goto(`${BASE}#/settings`);
 await page.setInputFiles('[data-pick="restore"]', `${OUT}/demo/demo-backup.zip`);
 await page.waitForFunction(() => /Restored/.test(document.querySelector('#toast')?.textContent || ''), null, { timeout: 30000 });
+await openSection('theme');
 await page.evaluate(() => window.scrollTo(0, 0));
 await page.waitForTimeout(300);
 await page.locator('#theme-card').screenshot({ path: `${SHOTS}/settings-card.png` });
@@ -34,6 +41,7 @@ assert.equal(ids[0], 'auto');
 
 for (const id of ids.slice(1)) {
   await page.goto(`${BASE}#/settings`);
+  await openSection('theme');
   await page.click(`.theme-tile[data-theme-id="${id}"]`);
   await page.waitForFunction((t) => document.documentElement.dataset.theme === t, id);
   const meta = await page.$eval('meta[name="theme-color"]', (m) => m.content);
@@ -50,11 +58,13 @@ console.log('- every theme applies, colours the status bar, and gets its picture
 
 // Straight after a reload the last theme is already on (no flash of purple).
 await page.goto(`${BASE}#/settings`);
+await openSection('theme');
 await page.click('.theme-tile[data-theme-id="halloween"]');
 await page.waitForFunction(() => document.documentElement.dataset.theme === 'halloween');
 await page.reload({ waitUntil: 'domcontentloaded' });
 assert.equal(await page.evaluate(() => document.documentElement.dataset.theme), 'halloween');
 await page.waitForSelector('#theme-card');
+await openSection('theme');
 assert.equal(await page.locator('.theme-tile.on').getAttribute('data-theme-id'), 'halloween');
 console.log('- chosen theme survives a reload and is on before settings load');
 

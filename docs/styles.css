@@ -1062,3 +1062,26 @@ html.touring { overflow: hidden; }
   box-shadow: 0 0 0 2px var(--accent);
 }
 .theme-check svg { width: 16px; height: 16px; stroke-width: 3; }
+
+/* ---------- Settings: each section folds to one row ---------- */
+
+.page-settings .settings-section { margin: 10px 0; padding: 0; }
+.settings-section > summary {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 64px;
+  padding: 14px 14px 14px 16px;
+  list-style: none;
+  cursor: pointer;
+}
+.settings-section > summary::-webkit-details-marker { display: none; }
+.sec-head { display: flex; flex: 1; flex-direction: column; gap: 3px; min-width: 0; }
+.sec-title { display: flex; align-items: center; gap: 8px; font: 700 18px/1.2 var(--display); }
+.sec-title svg { color: var(--accent); }
+.sec-sub { overflow: hidden; color: var(--muted); font-size: 14px; white-space: nowrap; text-overflow: ellipsis; }
+.sec-warn { color: var(--warn); font-weight: 600; }
+.sec-chev { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 10px; background: var(--field); color: var(--ink-2); transition: transform 0.2s ease; flex: none; }
+.settings-section[open] > summary .sec-chev { transform: rotate(90deg); }
+.settings-section[open] > summary { padding-bottom: 8px; }
+.sec-body { padding: 0 16px 16px; }

@@ -32,6 +32,12 @@ const step = (msg) => console.log(`- ${msg}`);
 const settle = () => page.waitForTimeout(250);
 const toastText = async () => (await page.locator('#toast').innerText()).trim();
 
+// Settings sections start folded: open one (if it isn't already) before using what's inside.
+const openSection = async (id) => {
+  const d = page.locator(`details[data-section="${id}"]`);
+  if (!(await d.evaluate((el) => el.open))) await d.locator('summary').click();
+};
+
 // 1. Empty app
 await page.goto(BASE);
 await page.waitForSelector('.welcome');
@@ -289,7 +295,9 @@ await page.route('https://generativelanguage.googleapis.com/**', async (route) =
   });
 });
 await page.goto(`${BASE}#/settings`);
-await page.waitForSelector('#gemini-key');
+await page.waitForSelector('details[data-section="ai"]');
+assert.equal(await page.locator('details.settings-section[open]').count(), 0, 'Settings starts folded');
+await openSection('ai');
 await page.fill('#gemini-key', 'AIzaSyD-example-only-not-a-real-key-000');
 await page.click('[data-action="save-key"]');
 await page.waitForSelector('.key-on');
@@ -357,6 +365,14 @@ await shot('11b-items-full', true);
 const todoTiles = await page.locator('.todo').allInnerTexts();
 step(`to-do strip: ${todoTiles.map((t) => t.replace(/\s+/g, ' ')).join(' | ')}`);
 
+await page.click('.notice-backup [data-action="open-section"]');
+await page.waitForSelector('details[data-section="backup"][open]');
+assert.equal(await page.locator('details.settings-section[open]').count(), 1, 'only Backup is opened');
+await page.waitForTimeout(300);
+await shot('14a-settings-backup-open');
+step('"Back up now" reminder opens Settings with just Backup unfolded');
+await page.goto(BASE);
+await page.waitForSelector('#grid');
 await page.click('.todo:has-text("Listed 14+ days")');
 assert.equal(await page.locator('.grid .item-card').count(), 1);
 await page.click('.grid .item-card');
@@ -388,6 +404,7 @@ step(`chart tap: ${await text('#month-caption')}`);
 
 // 10. Backup, wipe, restore
 await page.goto(`${BASE}#/settings`);
+await openSection('backup');
 await page.waitForSelector('[data-action="backup"]');
 const count = await page.evaluate(() => new Promise((res) => { const r = indexedDB.open('curbside'); r.onsuccess = () => { const q = r.result.transaction('items').objectStore('items').count(); q.onsuccess = () => res(q.result); }; }));
 const [backupDl] = await Promise.all([page.waitForEvent('download'), page.click('[data-action="backup"]')]);
@@ -401,6 +418,7 @@ assert.ok(zip.names.includes('inventory.csv'));
 step(`backup: ${backupDl.suggestedFilename()} with ${saved.items.length} items, ${zip.names.filter((n) => n.startsWith('photos/')).length} photos`);
 await shot('14-settings', true);
 
+await openSection('wipe');
 await page.check('#wipe-ok');
 await page.click('#wipe-btn');
 await page.waitForSelector('.welcome');

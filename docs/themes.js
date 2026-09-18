@@ -1,6 +1,7 @@
 // App themes: the original purple plus one for each major American holiday. Colours live in
 // themes.css (made by tools/make-themes.mjs); this file has the names, the little pictures
-// (emoji, so they look right on every phone) and the dates for Automatic.
+// (emoji, so they look right on every phone) and the dates for Automatic. Hanukkah, Kwanzaa and
+// Juneteenth were taken out on 2026-09-18 at Eli's request.
 
 const DAY = 86400000;
 const at = (y, m, d) => new Date(y, m - 1, d, 12).getTime(); // noon, so DST never moves the day
@@ -35,25 +36,10 @@ export function easter(y) {
   return at(y, month, day);
 }
 
-// First day of Hanukkah (25 Kislev), found with the phone's own Hebrew calendar.
-// Returns null where the browser doesn't have one, and Automatic just skips it.
-export function hanukkah(y) {
-  try {
-    const fmt = new Intl.DateTimeFormat('en-u-ca-hebrew', { month: 'long', day: 'numeric' });
-    for (let t = at(y, 11, 10); t <= at(y, 12, 31); t += DAY) {
-      const parts = fmt.formatToParts(new Date(t));
-      const month = parts.find((p) => p.type === 'month')?.value;
-      const day = Number(parts.find((p) => p.type === 'day')?.value);
-      if (month === 'Kislev' && day === 25) return t;
-    }
-  } catch { /* no Hebrew calendar here */ }
-  return null;
-}
-
 // lead: days before the holiday the theme starts; linger: days it stays after.
 export const THEMES = [
   { id: 'curbside', name: 'Original', when: 'Purple and pink', emoji: [], icon: ['💜', '🏷️', '✨'] },
-  { id: 'newyear', name: "New Year's", when: 'Jan 1', emoji: ['🎆', '🥂', '🎉', '✨', '🎊'], date: (y) => at(y, 1, 1), lead: 1, linger: 2 },
+  { id: 'newyear', name: "New Year's", when: 'Jan 1', emoji: ['🎆', '🥂', '🎉', '✨', '🎊'], date: (y) => at(y, 1, 1), lead: 5, linger: 2 },
   { id: 'mlk', name: 'MLK Day', when: '3rd Mon in Jan', emoji: ['🕊️', '🤝', '💙', '✨'], date: (y) => nthWeekday(y, 1, 1, 3), lead: 6, linger: 0 },
   { id: 'valentines', name: "Valentine's Day", when: 'Feb 14', emoji: ['💕', '💌', '🌹', '💘', '🍫'], date: (y) => at(y, 2, 14), lead: 13, linger: 0 },
   { id: 'presidents', name: "Presidents' Day", when: '3rd Mon in Feb', emoji: ['🎩', '⭐', '🇺🇸', '🦅'], date: (y) => nthWeekday(y, 2, 1, 3), lead: 5, linger: 0 },
@@ -62,15 +48,12 @@ export const THEMES = [
   { id: 'mothersday', name: "Mother's Day", when: '2nd Sun in May', emoji: ['💐', '🌸', '💗', '🌷'], date: (y) => nthWeekday(y, 5, 0, 2), lead: 7, linger: 0 },
   { id: 'memorial', name: 'Memorial Day', when: 'Last Mon in May', emoji: ['⭐', '🕊️', '🇺🇸', '🎗️'], date: (y) => nthWeekday(y, 5, 1, -1), lead: 6, linger: 0 },
   { id: 'fathersday', name: "Father's Day", when: '3rd Sun in June', emoji: ['👔', '🎣', '🛠️', '⭐'], date: (y) => nthWeekday(y, 6, 0, 3), lead: 6, linger: 0 },
-  { id: 'juneteenth', name: 'Juneteenth', when: 'June 19', emoji: ['⭐', '🎆', '🎉', '❤️', '💚'], date: (y) => at(y, 6, 19), lead: 5, linger: 0 },
   { id: 'july4', name: 'Fourth of July', when: 'July 4', emoji: ['🎆', '🇺🇸', '🎇', '⭐', '🌭'], date: (y) => at(y, 7, 4), lead: 10, linger: 1 },
   { id: 'laborday', name: 'Labor Day', when: '1st Mon in Sep', emoji: ['☀️', '🕶️', '🌭', '🏖️'], date: (y) => nthWeekday(y, 9, 1, 1), lead: 6, linger: 0 },
   { id: 'halloween', name: 'Halloween', when: 'Oct 31', emoji: ['🎃', '👻', '🦇', '🕸️', '🍬'], date: (y) => at(y, 10, 31), lead: 30, linger: 0 },
   { id: 'veterans', name: 'Veterans Day', when: 'Nov 11', emoji: ['🎖️', '⭐', '🇺🇸', '🦅'], date: (y) => at(y, 11, 11), lead: 6, linger: 0 },
   { id: 'thanksgiving', name: 'Thanksgiving', when: '4th Thu in Nov', emoji: ['🦃', '🍂', '🥧', '🌽', '🍁'], date: (y) => nthWeekday(y, 11, 4, 4), lead: 10, linger: 1 },
-  { id: 'hanukkah', name: 'Hanukkah', when: '8 nights in Dec', emoji: ['🕎', '✡️', '✨', '🍩', '💙'], date: hanukkah, lead: 3, linger: 7 },
-  { id: 'christmas', name: 'Christmas', when: 'Dec 25', emoji: ['🎄', '🎁', '❄️', '⛄', '🍪'], date: (y) => at(y, 12, 25), lead: 24, linger: 0 },
-  { id: 'kwanzaa', name: 'Kwanzaa', when: 'Dec 26 to Jan 1', emoji: ['🕯️', '❤️', '🖤', '💚', '✨'], date: (y) => at(y, 12, 26), lead: 0, linger: 4 },
+  { id: 'christmas', name: 'Christmas', when: 'Dec 25', emoji: ['🎄', '🎁', '❄️', '⛄', '🍪'], date: (y) => at(y, 12, 25), lead: 24, linger: 1 },
 ];
 
 export const AUTO = 'auto';

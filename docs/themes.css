@@ -250,31 +250,6 @@
   --ink-2: #f6fcff;
 }
 
-[data-theme="juneteenth"] {
-  --bg: #1a0d0d;
-  --bg-2: #26140e;
-  --bg-mid: #1f100d;
-  --glow: #5a1c12;
-  --surface: #2e1a16;
-  --surface-2: #3b2824;
-  --field: #231311;
-  --sunk: #201110;
-  --line: #473532;
-  --line-strong: #60514e;
-  --grad-a: #b3261e;
-  --grad-b: #1f7a3d;
-  --solid: #69502e;
-  --toast: #6a1f1a;
-  --accent-soft: #5d1e19;
-  --accent: #ffd36b;
-  --accent-strong: #ffe9b5;
-  --pink-soft: #4b262a;
-  --warn-soft: #4b262a;
-  --warn: #ffb3cb;
-  --muted: #bcb1a5;
-  --ink-2: #fffbf0;
-}
-
 [data-theme="july4"] {
   --bg: #0a1330;
   --bg-2: #1a1540;
@@ -400,31 +375,6 @@
   --ink-2: #fff9f2;
 }
 
-[data-theme="hanukkah"] {
-  --bg: #0b1633;
-  --bg-2: #13224a;
-  --bg-mid: #0f1b3d;
-  --glow: #2a4590;
-  --surface: #172a55;
-  --surface-2: #25375f;
-  --field: #101f42;
-  --sunk: #0f1c3d;
-  --line: #334469;
-  --line-strong: #4f5d7e;
-  --grad-a: #2f63d1;
-  --grad-b: #506da3;
-  --solid: #4068ba;
-  --toast: #22448d;
-  --accent-soft: #1f3e80;
-  --accent: #c4dcff;
-  --accent-strong: #e2eeff;
-  --pink-soft: #373461;
-  --warn-soft: #373461;
-  --warn: #ffb3cb;
-  --muted: #afb7c9;
-  --ink-2: #f9fcff;
-}
-
 [data-theme="christmas"] {
   --bg: #0b1a12;
   --bg-2: #0f2419;
@@ -448,29 +398,4 @@
   --warn: #ffb3cb;
   --muted: #b4b8aa;
   --ink-2: #fffbf2;
-}
-
-[data-theme="kwanzaa"] {
-  --bg: #0f140c;
-  --bg-2: #1a1a10;
-  --bg-mid: #14170e;
-  --glow: #4a1a10;
-  --surface: #1f2a1a;
-  --surface-2: #2c3728;
-  --field: #161e12;
-  --sunk: #141b10;
-  --line: #3a4435;
-  --line-strong: #555d51;
-  --grad-a: #1f7a3d;
-  --grad-b: #b3261e;
-  --solid: #69502e;
-  --toast: #1f4e2a;
-  --accent-soft: #1f4626;
-  --accent: #b8f0a0;
-  --accent-strong: #dcf8d0;
-  --pink-soft: #3e342e;
-  --warn-soft: #3e342e;
-  --warn: #ffb3cb;
-  --muted: #b0b9ac;
-  --ink-2: #f8fef6;
 }

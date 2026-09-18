@@ -1,6 +1,6 @@
 // Keeps trash2treasure working with no signal (out on the road, in a garage). Bump CACHE together with
 // VERSION in app.js on every release so phones pick up the new files.
-const CACHE = 'curbside-1.4.1';
+const CACHE = 'curbside-1.4.2';
 const ASSETS = [
   './',
   'index.html',

@@ -21,7 +21,7 @@ import {
 } from './views.js';
 
 // Bump together with CACHE in sw.js on every release, or installed phones keep old files.
-const VERSION = '1.4.1';
+const VERSION = '1.4.2';
 
 const DEFAULT_SETTINGS = {
   pickupArea: '',
@@ -81,6 +81,8 @@ const state = {
   persisted: null,
   listScroll: 0,
   themeId: 'curbside', // the theme showing now (Automatic resolves to a holiday)
+  openSettings: new Set(), // Settings sections she has opened on this visit
+  openNext: null, // a section to open (and scroll to) on the way into Settings
 };
 
 const $ = (sel, root = document) => root.querySelector(sel);
@@ -240,6 +242,9 @@ async function route() {
   state.ai = null;
   if (prev.name !== r.name) state.showAllSales = false;
   if (r.name !== 'settings') state.backupFile = null;
+  if (r.name === 'settings' && prev.name !== 'settings') {
+    state.openSettings = new Set(state.openNext ? [state.openNext] : []);
+  }
 
   try {
     if (r.id) {
@@ -276,6 +281,11 @@ async function route() {
   state.route = r;
   render();
   maybeTour();
+  if (r.name === 'settings' && state.openNext) {
+    const id = state.openNext;
+    state.openNext = null;
+    document.querySelector(`details[data-section="${id}"]`)?.scrollIntoView({ block: 'start' });
+  }
   if (r.name === 'items' && prev.name !== 'items') window.scrollTo(0, state.listScroll || 0);
   else if (prev.name !== r.name || prev.id !== r.id) window.scrollTo(0, 0);
 }
@@ -353,6 +363,17 @@ function applyTheme() {
   if (bg) $('meta[name="theme-color"]')?.setAttribute('content', bg);
   try { localStorage.setItem('curbside-theme', id); } catch { /* fine without it */ }
   return changed;
+}
+
+function openSection(id) {
+  if (state.route.name === 'settings') {
+    state.openSettings.add(id);
+    render();
+    document.querySelector(`details[data-section="${id}"]`)?.scrollIntoView({ block: 'start' });
+  } else {
+    state.openNext = id;
+    goTo('#/settings');
+  }
 }
 
 // ---------- tours ----------
@@ -1173,8 +1194,10 @@ const actions = {
   'ai-cancel': closeSheet,
   'ai-setup': () => {
     closeSheet();
-    goTo('#/settings');
-    setTimeout(() => $('#ai-settings')?.scrollIntoView({ block: 'start' }), 60);
+    openSection('ai');
+  },
+  'open-section'(el) {
+    openSection(el.dataset.section);
   },
   'ai-share'() {
     const ai = state.ai;
@@ -1450,6 +1473,12 @@ async function start() {
   document.addEventListener('input', onInput);
   document.addEventListener('change', onChange);
   document.addEventListener('focusin', onFocusIn);
+  document.addEventListener('toggle', (e) => {
+    const d = e.target;
+    if (!d.matches?.('details.settings-section')) return;
+    if (d.open) state.openSettings.add(d.dataset.section);
+    else state.openSettings.delete(d.dataset.section);
+  }, true);
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'hidden') {
       flushAll();

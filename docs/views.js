@@ -209,7 +209,7 @@ function backupNudge(s) {
   return `<section class="notice notice-backup">
     <div><strong>Back up your finds</strong>
     <p>${s.lastBackup ? `Last backup ${ago(s.lastBackup)}.` : 'No backup yet.'} Everything lives only on this phone, so a backup is your only copy if it's lost or reset.</p>
-    <div class="notice-actions"><a class="btn btn-small btn-primary" href="#/settings">Back up now</a><button class="btn btn-small btn-ghost" data-action="snooze-backup">Later</button></div></div>
+    <div class="notice-actions"><button class="btn btn-small btn-primary" data-action="open-section" data-section="backup">Back up now</button><button class="btn btn-small btn-ghost" data-action="snooze-backup">Later</button></div></div>
   </section>`;
 }
 
@@ -503,7 +503,7 @@ export function postPickView(s, item) {
       <p class="hint">A Facebook group, a text to a friend, anything your phone can share to.</p>
       <button class="btn btn-block" data-action="share-all" ${s.kit?.files ? '' : 'disabled'}>${ICON.share} Share photos and description</button>
     </section>
-    <p class="hint center">Missing a site? <a href="#/settings">Choose which sites show here</a></p>
+    <p class="hint center">Missing a site? <button class="link" data-action="open-section" data-section="sites">Choose which sites show here</button></p>
   </main>`;
 }
 
@@ -684,7 +684,20 @@ export function moneyView(s) {
 
 // ---------- Settings ----------
 
-function themeCard(s) {
+// Every Settings section folds down to one row: a title and a one-line summary of what's set.
+// Tapping opens it. Settings starts folded each visit; what she opens stays open while she's
+// there (state.openSettings, kept up to date by a 'toggle' listener in app.js).
+function section(s, id, title, sub, body, { domId, cls = '' } = {}) {
+  return `<details class="card settings-section${cls}" data-section="${id}" id="${domId || `${id}-section`}"${s.openSettings?.has(id) ? ' open' : ''}>
+    <summary>
+      <span class="sec-head"><span class="sec-title">${title}</span>${sub ? `<span class="sec-sub">${sub}</span>` : ''}</span>
+      <span class="sec-chev" aria-hidden="true">${ICON.right}</span>
+    </summary>
+    <div class="sec-body">${body}</div>
+  </details>`;
+}
+
+function themeSection(s) {
   const choice = s.settings.theme || 'curbside';
   const now = theme(holidayOn());
   const tile = (id, name, when, pics, look) => `<button class="theme-tile${choice === id ? ' on' : ''}" data-action="set-theme" data-theme-id="${id}" aria-pressed="${choice === id}">
@@ -693,24 +706,24 @@ function themeCard(s) {
       <span class="theme-when">${esc(when)}</span>
       ${choice === id ? `<span class="theme-check" aria-hidden="true">${ICON.check}</span>` : ''}
     </button>`;
-  return `<section class="card" id="theme-card">
-    <h2>🎨 App theme</h2>
+  const sub = choice === 'auto' ? `Automatic (${now.name} right now)` : theme(choice).name;
+  return section(s, 'theme', '🎨 App theme', esc(sub), `
     <p class="hint">Pick a look. <b>Automatic</b> switches to each holiday's theme as it comes up, and back to the original purple in between.</p>
     <div class="theme-grid">
       ${tile('auto', 'Automatic', `Right now: ${now.name}`, ['🗓️', ...(now.emoji.length ? now.emoji : now.icon).slice(0, 2)], now.id)}
       ${THEMES.map((t) => tile(t.id, t.name, t.when, t.emoji.length ? t.emoji : t.icon, t.id)).join('')}
-    </div>
-  </section>`;
+    </div>`, { domId: 'theme-card' });
 }
 
 export function settingsView(s) {
   const st = s.settings;
   const used = s.storage?.usage;
+  const sites = PLATFORMS.filter((p) => st.platforms.includes(p.id));
   return `${subbar('Settings')}
   <main class="page page-settings">
-    ${themeCard(s)}
-    <section class="card">
-      <h2>Added to your listings</h2>
+    ${themeSection(s)}
+
+    ${section(s, 'listing', 'Added to your listings', st.pickupArea?.trim() ? esc(`Pickup: ${st.pickupArea.trim()}`) : 'Pickup area and closing line', `
       <label class="field"><span class="field-label">Pickup area</span>
         <input data-setting="pickupArea" value="${esc(st.pickupArea)}" placeholder="e.g. Near Main St & 5th Ave" autocomplete="off"></label>
       <label class="field"><span class="field-label">Add to the end of every local listing</span>
@@ -718,16 +731,12 @@ export function settingsView(s) {
       <label class="check"><input type="checkbox" data-setting="addCondition" ${st.addCondition !== false ? 'checked' : ''}> Add a "Condition:" line</label>
       <p class="hint">Mercari, eBay and Poshmark ship, so they don't get the pickup lines.</p>
       <label class="field"><span class="field-label">Nudge me to drop the price after</span>
-        <select data-setting="staleDays">${options([7, 10, 14, 21, 30].map((d) => [String(d), `${d} days`]), String(st.staleDays))}</select></label>
-    </section>
+        <select data-setting="staleDays">${options([7, 10, 14, 21, 30].map((d) => [String(d), `${d} days`]), String(st.staleDays))}</select></label>`)}
 
-    <section class="card">
-      <h2>Where you sell</h2>
-      ${PLATFORMS.map((p) => `<label class="check platform-check"><input type="checkbox" data-platform-toggle="${p.id}" ${st.platforms.includes(p.id) ? 'checked' : ''}>${pdot(p.id)} ${esc(p.name)}<span class="muted small">${p.local ? 'local' : 'ships'}</span></label>`).join('')}
-    </section>
+    ${section(s, 'sites', 'Where you sell', esc(sites.length ? sites.map((p) => p.short).join(', ') : 'No sites picked'), `
+      ${PLATFORMS.map((p) => `<label class="check platform-check"><input type="checkbox" data-platform-toggle="${p.id}" ${st.platforms.includes(p.id) ? 'checked' : ''}>${pdot(p.id)} ${esc(p.name)}<span class="muted small">${p.local ? 'local' : 'ships'}</span></label>`).join('')}`)}
 
-    <section class="card" id="ai-settings">
-      <h2>${ICON.sparkle} AI listing writer <span class="pill">optional · free</span></h2>
+    ${section(s, 'ai', `${ICON.sparkle} AI listing writer`, st.geminiKey ? 'One-tap AI is on' : 'Optional and free', `
       <p>Tap <b>Write it for me</b> on an item and AI works out what it is from the photos, writes the title and description, and suggests a price.</p>
       ${st.geminiKey
     ? `<div class="key-on">${ICON.check} One-tap AI is on <span class="muted">(key ending ${esc(st.geminiKey.slice(-4))})</span></div>
@@ -739,41 +748,32 @@ export function settingsView(s) {
            <li>Paste it here. Never add billing there and it can't cost anything.</li>
          </ol>
          <div class="key-row"><input id="gemini-key" type="password" placeholder="Paste your key" autocomplete="off" autocapitalize="off" spellcheck="false"><button class="btn btn-primary" data-action="save-key">Save</button></div>`}
-      <p class="hint">Photos you send to AI go to Google (or whichever app you pick). Google may use free-tier requests to improve its products, so don't snap anything personal.</p>
-    </section>
+      <p class="hint">Photos you send to AI go to Google (or whichever app you pick). Google may use free-tier requests to improve its products, so don't snap anything personal.</p>`, { domId: 'ai-settings' })}
 
-    <section class="card" id="backup">
-      <h2>Backup</h2>
+    ${section(s, 'backup', 'Backup', s.lastBackup ? esc(`Last backup ${ago(s.lastBackup)}`) : `<span class="${s.items.length ? 'sec-warn' : ''}">No backup yet</span>`, `
       <p>Your finds live only on this phone. A backup is a .zip of every item and photo; save it to Files, Google Drive or email it to yourself.</p>
       <p class="hint">${s.lastBackup ? `Last backup ${esc(ago(s.lastBackup))} (${esc(longDate(s.lastBackup))}).` : 'No backup yet.'}</p>
       ${s.backupFile
     ? `<button class="btn btn-primary btn-block" data-action="backup-save">${ICON.share} Save backup (${(s.backupFile.size / 1048576).toFixed(1)} MB)</button>`
     : `<button class="btn btn-primary btn-block" data-action="backup" ${s.items.length ? '' : 'disabled'}>Back up now</button>`}
       <label class="btn btn-block btn-ghost">Restore from a backup<input type="file" accept=".zip,application/zip,application/x-zip-compressed" class="file-hidden" data-pick="restore"></label>
-      <p class="hint">Restoring adds the backup's items to what's here. Items in both keep whichever copy was changed last.</p>
-    </section>
+      <p class="hint">Restoring adds the backup's items to what's here. Items in both keep whichever copy was changed last.</p>`, { domId: 'backup' })}
 
-    <section class="card">
-      <h2>This phone</h2>
+    ${section(s, 'phone', 'This phone', esc(`${plural(s.items.length, 'item')}${used !== undefined ? ` · ${(used / 1048576).toFixed(1)} MB` : ''}`), `
       <p>${plural(s.items.length, 'item')}${used !== undefined ? ` · using ${(used / 1048576).toFixed(1)} MB` : ''}</p>
       ${s.persisted === true ? `<p class="hint">${ICON.check} The browser has agreed not to clear trash2treasure's data.</p>` : ''}
       ${s.persisted === false && !s.isIOS ? '<button class="btn btn-small" data-action="persist">Ask the browser to keep my data</button>' : ''}
       ${!s.standalone ? `<p class="hint">${s.isIOS ? 'Tip: add trash2treasure to your Home Screen (Share, then Add to Home Screen) so Safari never clears it.' : 'Tip: install trash2treasure from your browser menu so it opens like an app.'}</p>` : ''}
-      ${s.settings.hideInstall && !s.standalone ? '<button class="btn btn-small btn-ghost" data-action="show-install">Show the install tip again</button>' : ''}
-    </section>
+      ${s.settings.hideInstall && !s.standalone ? '<button class="btn btn-small btn-ghost" data-action="show-install">Show the install tip again</button>' : ''}`)}
 
-    <section class="card">
-      <h2>Tour</h2>
+    ${section(s, 'tour', 'Tour', 'The walk-through of the app', `
       <p class="hint">The walk-through that lights up each part of the app and says what it's for.</p>
-      <button class="btn btn-block" data-action="replay-tour">Show the tour again</button>
-    </section>
+      <button class="btn btn-block" data-action="replay-tour">Show the tour again</button>`)}
 
-    <section class="card card-danger">
-      <h2>Wipe app</h2>
+    ${section(s, 'wipe', 'Wipe app', 'Delete everything on this phone', `
       <p>Deletes every item, photo and setting in trash2treasure on this phone. Nothing else on the phone is touched. Back up first if you might want them.</p>
       <label class="check"><input type="checkbox" id="wipe-ok"> I understand</label>
-      <button class="btn btn-danger btn-block" data-action="wipe" id="wipe-btn" disabled>Wipe trash2treasure</button>
-    </section>
+      <button class="btn btn-danger btn-block" data-action="wipe" id="wipe-btn" disabled>Wipe trash2treasure</button>`, { cls: ' card-danger' })}
     <p class="version">trash2treasure ${esc(s.version)}</p>
   </main>`;
 }

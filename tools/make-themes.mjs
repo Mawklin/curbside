@@ -25,15 +25,12 @@ export const SPECS = {
   mothersday: { bg: '#2a1020', bg2: '#3d1832', glow: '#6a2a4a', surface: '#42193a', accent: '#ffc2d9', gradA: '#c2417a', gradB: '#d0643c' },
   memorial: { bg: '#0c1428', bg2: '#16213f', glow: '#4a1622', surface: '#19264a', accent: '#ffb4b4', gradA: '#a3202e', gradB: '#243f8f' },
   fathersday: { bg: '#0c1a26', bg2: '#13293a', glow: '#1f4a68', surface: '#183247', accent: '#a6dcff', gradA: '#1f6fa8', gradB: '#2f8a6e' },
-  juneteenth: { bg: '#1a0d0d', bg2: '#26140e', glow: '#5a1c12', surface: '#2e1a16', accent: '#ffd36b', gradA: '#b3261e', gradB: '#1f7a3d' },
   july4: { bg: '#0a1330', bg2: '#1a1540', glow: '#4a1232', surface: '#16224d', accent: '#a6ccff', gradA: '#c4213a', gradB: '#2b4fc9' },
   laborday: { bg: '#1f1410', bg2: '#2e1d12', glow: '#6a3812', surface: '#33221a', accent: '#ffc27a', gradA: '#c4541e', gradB: '#b0305a' },
   halloween: { bg: '#150c1c', bg2: '#221028', glow: '#5a2a0e', surface: '#25152e', accent: '#ffae5c', gradA: '#d0561a', gradB: '#6b2fa8' },
   veterans: { bg: '#10160f', bg2: '#1a2418', glow: '#34452a', surface: '#222e1f', accent: '#f2d27a', gradA: '#56692e', gradB: '#2a3f7a' },
   thanksgiving: { bg: '#1c120b', bg2: '#2b1a0f', glow: '#6a3410', surface: '#332114', accent: '#ffc07a', gradA: '#b5541b', gradB: '#8a3a1a' },
-  hanukkah: { bg: '#0b1633', bg2: '#13224a', glow: '#2a4590', surface: '#172a55', accent: '#c4dcff', gradA: '#2f63d1', gradB: '#5a7bb8' },
   christmas: { bg: '#0b1a12', bg2: '#0f2419', glow: '#4a1218', surface: '#16301f', accent: '#ffd27a', gradA: '#c0283a', gradB: '#1f7a45' },
-  kwanzaa: { bg: '#0f140c', bg2: '#1a1a10', glow: '#4a1a10', surface: '#1f2a1a', accent: '#b8f0a0', gradA: '#1f7a3d', gradB: '#b3261e' },
 };
 
 // ---------- colour maths ----------

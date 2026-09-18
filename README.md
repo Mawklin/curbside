@@ -21,12 +21,14 @@ inventory and there's no server to pay for.
   white panels). Every text colour is checked with `node tools/check-contrast.mjs`.
 - **App theme** (Settings, first card): the original purple, a theme for each major American
   holiday (New Year's, MLK Day, Valentine's, Presidents' Day, St. Patrick's, Easter, Mother's Day,
-  Memorial Day, Father's Day, Juneteenth, Fourth of July, Labor Day, Halloween, Veterans Day,
-  Thanksgiving, Hanukkah, Christmas, Kwanzaa), or Automatic, which follows the calendar (Easter and
-  Hanukkah dates are worked out each year). Each theme has its own gradient and emoji: next to the
+  Memorial Day, Father's Day, Fourth of July, Labor Day, Halloween, Veterans Day, Thanksgiving,
+  Christmas), or Automatic, which follows the calendar (Easter's date is worked out each year). Each theme has its own gradient and emoji: next to the
   name, on the camera button, and faintly in the background. Colours are generated from a few key
   colours per theme by `node tools/make-themes.mjs` (writes `docs/themes.css`), and every theme is
   checked by `tools/check-contrast.mjs`.
+- **Settings**: every section folds to one row with a one-line summary (theme, pickup area, sites,
+  AI on/off, last backup...). Settings opens folded each visit; links that lead to one section
+  ("Back up now", the AI "Set it up", "Choose which sites show here") open just that one.
 - **Guided tours**: the first time she opens the app, and the first time she opens a find, the
   posting page, a site's steps or Money, the screen dims and each part is lit up in turn with a note
   on what it's for. Skip on the first tour turns them all off; Settings → Show the tour again brings

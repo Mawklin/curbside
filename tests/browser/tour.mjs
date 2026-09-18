@@ -22,6 +22,12 @@ page.on('pageerror', (e) => problems.push(e.message));
 page.on('dialog', (d) => d.accept());
 const step = (msg) => console.log(`- ${msg}`);
 
+// Settings sections start folded: open one (if it isn't already) before using what's inside.
+const openSection = async (id) => {
+  const d = page.locator(`details[data-section="${id}"]`);
+  if (!(await d.evaluate((el) => el.open))) await d.locator('summary').click();
+};
+
 // Checks the lit window surrounds the element the step names, then goes through every step.
 async function walk(name, { shots = Infinity } = {}) {
   await page.waitForSelector('#tour .tour-card', { timeout: 5000 });
@@ -54,6 +60,15 @@ async function walk(name, { shots = Infinity } = {}) {
 await page.goto(BASE);
 const home = await walk('home');
 assert.ok(home.includes('Add a find') && home.includes('Money') && home.includes('Settings'));
+// Wait for the "seen it" note to be saved before reloading (a reload a few milliseconds after the
+// last tap can cut the save off, which no person would do).
+await page.waitForFunction(() => new Promise((ok) => {
+  const r = indexedDB.open('curbside');
+  r.onsuccess = () => {
+    const q = r.result.transaction('meta').objectStore('meta').get('settings');
+    q.onsuccess = () => ok(Boolean(q.result?.tours?.home));
+  };
+}));
 await page.reload();
 await page.waitForTimeout(900);
 assert.equal(await page.locator('#tour').count(), 0, 'home tour only once');
@@ -84,7 +99,7 @@ await walk('money');
 
 // 5. Replay from Settings; skipping the home tour turns the rest off.
 await page.goto(`${BASE}#/settings`);
-await page.waitForSelector('[data-action="replay-tour"]');
+await openSection('tour');
 await page.click('[data-action="replay-tour"]');
 await page.waitForSelector('#tour .tour-card');
 await page.click('#tour [data-tour="skip"]');
